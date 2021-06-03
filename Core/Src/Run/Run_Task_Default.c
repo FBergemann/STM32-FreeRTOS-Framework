@@ -23,13 +23,13 @@
 void Run_Task_Default(void const * argument)
 {
   /* USER CODE BEGIN 5 */
-  printf("enter run loop...\n\t");
+  printf("enter run loop...\r\n");
 
   /* endless loop */
   int idx = 0;
   for(;;)
   {
-    printf("#%03d:in run loop...\n\r", idx);
+    printf("#%03d:in run loop...\r\n", idx);
     idx = idx + 1;
     osDelay(1000);
   }

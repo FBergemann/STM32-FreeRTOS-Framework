@@ -97,10 +97,8 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
   /* Set the TIMx priority */
   HAL_NVIC_SetPriority(TIMx_IRQn, 6, 0);
 
-#ifdef TASK_LED2_USE_NEW_VERSION_ENABLE_IRQ
   /* Enable the TIMx global Interrupt */
   HAL_NVIC_EnableIRQ(TIMx_IRQn);
-#endif
 }
 
 /**

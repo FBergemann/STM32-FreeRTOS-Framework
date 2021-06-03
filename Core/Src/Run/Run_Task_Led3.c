@@ -15,7 +15,7 @@
 
 void Run_Task_Led3(void const * argument)
 {
-  printf("start Task_Led3...\n\t");
+  printf("start Task_Led3...\r\n");
 
   while (1)
   {
