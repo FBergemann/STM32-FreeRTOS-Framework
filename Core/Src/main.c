@@ -24,10 +24,12 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include <stdio.h>
-#include <UserInc/Tasks/Task1.h>
-#include <UserInc/Tasks/Task2.h>
-#include <UserInc/Tasks/Task3.h>
+#include "UserInc/Logging.h"
+
+#include "UserInc/Tasks/TaskConsole.h"
+#include "UserInc/Tasks/Task1.h"
+#include "UserInc/Tasks/Task2.h"
+#include "UserInc/Tasks/Task3.h"
 
 /* USER CODE END Includes */
 
@@ -58,6 +60,7 @@ osThreadId defaultTaskHandle;
 
 osThreadId task1Handle;
 osThreadId task3Handle;
+osThreadId taskConsoleHandle ;
 
 /* USER CODE END PV */
 
@@ -118,7 +121,7 @@ int main(void)
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
+  TaskConsole_PrepareRTOS();
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -139,11 +142,14 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  osThreadDef(TaskConsole, TaskConsole_Run, osPriorityNormal, 0, 128);
+  taskConsoleHandle = osThreadCreate(osThread(TaskConsole), NULL);
+
   osThreadDef(Task1, Task1_Run, osPriorityNormal, 0, 128);
-  defaultTaskHandle = osThreadCreate(osThread(Task1), NULL);
+  task1Handle = osThreadCreate(osThread(Task1), NULL);
 
   osThreadDef(Task3, Task3_Run, osPriorityNormal, 0, 128);
-  defaultTaskHandle = osThreadCreate(osThread(Task3), NULL);
+  task3Handle = osThreadCreate(osThread(Task3), NULL);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -421,14 +427,16 @@ void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-  printf("enter run loop...\r\n"); // TODO
+  TaskConsole_AddLog("enter run loop...\r\n");
 
   /* endless loop */
   int idx = 0;
   for(;;)
   {
-	printf("#%03d:in run loop...\r\n", idx); // TODO
-	idx = idx + 1;
+	static char buff[256] = "#...:in run loop...\r\n";
+	LogIntToStr(buff + 1, idx, 3);
+	Log(buff);
+	idx = (idx + 1) % 1000;
 	osDelay(1000);
   }
   /* USER CODE END 5 */

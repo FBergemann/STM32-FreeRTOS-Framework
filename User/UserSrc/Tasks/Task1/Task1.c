@@ -5,14 +5,14 @@
  *      Author: frank
  */
 
-#include <main.h>
+#include "main.h"
 #include <cmsis_os.h>
 
-#include <stdio.h> // TODO
+#include "UserInc/Tasks/TaskConsole.h"
 
 void Task1_Run(void const * argument)
 {
-  printf("start Task1...\r\n"); // TODO
+  TaskConsole_AddLog("start Task1...\r\n");
 
   while (1)
   {
