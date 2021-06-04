@@ -273,7 +273,7 @@ __weak HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority)
       (+) Enable/Disable Debug module during SLEEP mode
       (+) Enable/Disable Debug module during STOP mode
       (+) Enable/Disable Debug module during STANDBY mode
-x
+
 @endverbatim
   * @{
   */
