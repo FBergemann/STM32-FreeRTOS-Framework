@@ -7,26 +7,37 @@
 
 #include <main.h>
 
-extern UART_HandleTypeDef huart3;
+#include <stdio.h>
 
-#ifdef __GNUC__
-/* With GCC, small printf (option LD Linker->Libraries->Small printf
-   set to 'Yes') calls __io_putchar() */
-#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif /* __GNUC__ */
+#include "UserInc/Tasks/TaskConsole.h"
 
-/**
-  * @brief  Retargets the C library printf function to the USART.
-  * @param  None
-  * @retval None
-  */
-PUTCHAR_PROTOTYPE
+#include "UserInc/Logging.h"
+
+void Log(const LogClient_t logClient, const char* str)
 {
-  /* Place your implementation of fputc here */
-  /* e.g. write a character to the USART3 and Loop until the end of transmission */
-  HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1, 0xFFFF);
+	TaskConsole_AddLog(logClient, str);
+}
 
-  return ch;
+char* LogClientID2String(const LogClient_t logClient)
+{
+	switch (logClient) {
+	case LC_Main_c :	return "M  "; break;
+	case LC_Console_c:	return "CON"; break;
+	case LC_LED1_c :	return "L1 "; break;
+	case LC_LED2_c :	return "L2 "; break;
+	case LC_LED3_c :	return "L3 "; break;
+	case LC_ADC_c  :	return "ADC"; break;
+	}
+	return "?  ";
+}
+
+void LogIntToStr(char *dest, int value, int digits)
+{
+	if (dest == NULL) return;
+	digits = digits - 1;
+	while (digits >= 0) {
+		dest[digits] = (value % 10) + '0';
+		value = value / 10;
+		digits = digits -1;
+	}
 }

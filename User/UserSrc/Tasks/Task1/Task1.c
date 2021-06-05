@@ -5,17 +5,16 @@
  *      Author: frank
  */
 
-#include <main.h>
+#include "main.h"
 #include <cmsis_os.h>
 
-#include <stdio.h> // TODO
+#include "UserInc/Logging.h"
 
 void Task1_Run(void const * argument)
 {
-  printf("start Task1...\r\n"); // TODO
+  Log(LC_LED1_c, "start Task1...\r\n");
 
-  while (1)
-  {
+  while (1) {
     HAL_GPIO_TogglePin(LD1_GPIO_Port, LD1_Pin);
     osDelay(500);
   }
