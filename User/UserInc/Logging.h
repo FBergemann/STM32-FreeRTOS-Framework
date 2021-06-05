@@ -15,10 +15,13 @@ typedef enum {
 	LC_LED2_c,
 	LC_LED3_c,
 	LC_ADC_c,
+	LC_EOL_c, 	// end marker
 } LogClient_t;
 
 void	Log(const LogClient_t logClient, const char* str);
 char*	LogClientID2String(const LogClient_t logClient);
+char* 	LogMakePrefix(const LogClient_t logClient, size_t* lenPrefix);
+
 // conversions
 void	LogIntToStr(char *dest, int value, int digits);
 

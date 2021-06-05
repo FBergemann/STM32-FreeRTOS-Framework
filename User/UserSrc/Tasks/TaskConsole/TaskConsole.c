@@ -15,6 +15,7 @@
 #include "UserInc/Tasks/TaskConsole.h"
 
 extern UART_HandleTypeDef huart3;
+extern RTC_HandleTypeDef hrtc;
 
 #define LOG_BUFF_SIZE 10240 // 10 KByte
 
@@ -67,20 +68,19 @@ static void AddLogCore(const char* str, const size_t len)
 	}
 }
 
-static char prefix[] = "2021-05-01 12:30:00.123:ADC:";
-static size_t lenPrefix = sizeof(prefix) - 1;
-
 void TaskConsole_AddLog(const LogClient_t logClient, const char* str)
 {
 	if (str == NULL) return;
 	size_t lenStr = strlen(str);
+
+	size_t lenPrefix;
+	char* prefix = LogMakePrefix(logClient, &lenPrefix);
+
 	size_t len = lenPrefix + lenStr + 1;
 	if (len > LOG_BUFF_SIZE) return;
 
 	osSemaphoreWait(osSemaphore, 0);
-		memcpy(prefix+24, LogClientID2String(logClient), 3);
-		AddLogCore(prefix, lenPrefix);
-		AddLogCore(str, lenStr + 1);
-
+	AddLogCore(prefix, lenPrefix);
+	AddLogCore(str, lenStr + 1);
 	osSemaphoreRelease(osSemaphore);
 }
