@@ -8,14 +8,13 @@
 #include "main.h"
 #include <cmsis_os.h>
 
-#include "UserInc/Tasks/TaskConsole.h"
+#include "UserInc/Logging.h"
 
 void Task3_Run(void const * argument)
 {
-  TaskConsole_AddLog("start Task3...\r\n");
+  Log(LC_LED3_c, "start Task3...\r\n");
 
-  while (1)
-  {
+  while (1) {
     HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
     osDelay(125);
   }

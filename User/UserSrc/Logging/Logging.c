@@ -11,9 +11,24 @@
 
 #include "UserInc/Tasks/TaskConsole.h"
 
-void Log(const char* str)
+#include "UserInc/Logging.h"
+
+void Log(const LogClient_t logClient, const char* str)
 {
-	TaskConsole_AddLog(str);
+	TaskConsole_AddLog(logClient, str);
+}
+
+char* LogClientID2String(const LogClient_t logClient)
+{
+	switch (logClient) {
+	case LC_Main_c :	return "M  "; break;
+	case LC_Console_c:	return "CON"; break;
+	case LC_LED1_c :	return "L1 "; break;
+	case LC_LED2_c :	return "L2 "; break;
+	case LC_LED3_c :	return "L3 "; break;
+	case LC_ADC_c  :	return "ADC"; break;
+	}
+	return "?  ";
 }
 
 void LogIntToStr(char *dest, int value, int digits)

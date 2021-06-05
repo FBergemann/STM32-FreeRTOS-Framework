@@ -30,6 +30,7 @@
 #include "UserInc/Tasks/Task1.h"
 #include "UserInc/Tasks/Task2.h"
 #include "UserInc/Tasks/Task3.h"
+#include "UserInc/Tasks/TaskADC.h"
 
 /* USER CODE END Includes */
 
@@ -58,9 +59,10 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
 
+osThreadId taskConsoleHandle;
 osThreadId task1Handle;
 osThreadId task3Handle;
-osThreadId taskConsoleHandle ;
+osThreadId taskADCHandle;
 
 /* USER CODE END PV */
 
@@ -112,7 +114,10 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_TIM14_Init();
+
   /* USER CODE BEGIN 2 */
+
+  HAL_TIM_Base_Start_IT(&htim14);
 
   /* USER CODE END 2 */
 
@@ -126,8 +131,6 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
-
-  HAL_TIM_Base_Start_IT(&htim14);
 
   /* USER CODE END RTOS_TIMERS */
 
@@ -151,6 +154,9 @@ int main(void)
   osThreadDef(Task3, Task3_Run, osPriorityNormal, 0, 128);
   task3Handle = osThreadCreate(osThread(Task3), NULL);
 
+  osThreadDef(TaskADC, TaskADC_Run, osPriorityNormal, 0, 128);
+  taskADCHandle = osThreadCreate(osThread(TaskADC), NULL);
+
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -162,7 +168,9 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-    osDelay(1000);
+
+    HAL_Delay(1000);
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -427,7 +435,7 @@ void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-  TaskConsole_AddLog("enter run loop...\r\n");
+  Log(LC_Main_c, "enter run loop...\r\n");
 
   /* endless loop */
   int idx = 0;
@@ -435,9 +443,9 @@ void StartDefaultTask(void const * argument)
   {
 	static char buff[256] = "#...:in run loop...\r\n";
 	LogIntToStr(buff + 1, idx, 3);
-	Log(buff);
+	Log(LC_Main_c, buff);
 	idx = (idx + 1) % 1000;
-	osDelay(1000);
+	osDelay(5000);
   }
   /* USER CODE END 5 */
 }
