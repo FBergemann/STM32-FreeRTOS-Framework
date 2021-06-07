@@ -37,12 +37,20 @@ void TaskConsole_Run(void const * argument)
 	Log(LC_Console_c, "start TaskConsole...\r\n");
 
 	while (1) {
-		if (writePtr != readPtr) {
-			HAL_UART_Transmit(&huart3, (uint8_t *)readPtr, 1, 0xFFFF);
-			readPtr += 1;
-			if (readPtr > endPtr) readPtr = logBuffer;
+		char *writePtrCopy = writePtr;
+		if (writePtrCopy != readPtr) {
+			if (writePtrCopy > readPtr) {
+				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)readPtr, writePtrCopy - readPtr);
+			}
+			else {
+				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)readPtr, endPtr - readPtr + 1);
+				while ( HAL_UART_GetState(&huart3) != HAL_UART_STATE_READY);
+				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)logBuffer, writePtrCopy - logBuffer);
+			}
+			while ( HAL_UART_GetState(&huart3) != HAL_UART_STATE_READY);
+			readPtr = writePtrCopy;
 		}
-		osDelay(2); // TODO don't use timeout, but interrupt
+		osDelay(2);
 	}
 }
 
@@ -57,14 +65,18 @@ static void AddLogCore(const char* str, const size_t len)
 	size_t noWrapLen = endPtr - writePtr + 1;
 	if (noWrapLen >= len) {
 		memcpy(writePtr, str, len);
-		writePtr += len;
-		if (writePtr > endPtr) writePtr = logBuffer;
+		vTaskSuspendAll();
+			writePtr += len;
+			if (writePtr > endPtr) writePtr = logBuffer;
+		xTaskResumeAll();
 	}
 	else {
 		memcpy(writePtr, str, noWrapLen);
 		size_t restLen = len - noWrapLen;
 		memcpy(logBuffer, str + noWrapLen, restLen);
-		writePtr = logBuffer + restLen;
+		vTaskSuspendAll();
+			writePtr = logBuffer + restLen;
+		xTaskResumeAll();
 	}
 }
 
@@ -80,7 +92,7 @@ void TaskConsole_AddLog(const LogClient_t logClient, const char* str)
 	if (len > LOG_BUFF_SIZE) return;
 
 	osSemaphoreWait(osSemaphore, 0);
-	AddLogCore(prefix, lenPrefix);
-	AddLogCore(str, lenStr + 1);
+		AddLogCore(prefix, lenPrefix);
+		AddLogCore(str, lenStr + 1);
 	osSemaphoreRelease(osSemaphore);
 }
