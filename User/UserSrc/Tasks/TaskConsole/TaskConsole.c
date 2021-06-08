@@ -39,18 +39,20 @@ void TaskConsole_Run(void const * argument)
 	while (1) {
 		char *writePtrCopy = writePtr;
 		if (writePtrCopy != readPtr) {
+			HAL_UART_StateTypeDef x;
 			if (writePtrCopy > readPtr) {
 				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)readPtr, writePtrCopy - readPtr);
 			}
 			else {
 				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)readPtr, endPtr - readPtr + 1);
-				while ( HAL_UART_GetState(&huart3) != HAL_UART_STATE_READY);
+				while ( (x = HAL_UART_GetState(&huart3)) != HAL_UART_STATE_READY); // TODO
 				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)logBuffer, writePtrCopy - logBuffer);
 			}
-			while ( HAL_UART_GetState(&huart3) != HAL_UART_STATE_READY);
+			while ( (x = HAL_UART_GetState(&huart3)) != HAL_UART_STATE_READY); // TODO
 			readPtr = writePtrCopy;
+			continue; // check immediately again, no timeout
 		}
-		osDelay(2);
+		osDelay(1);
 	}
 }
 
@@ -58,25 +60,22 @@ void TaskConsole_Run(void const * argument)
  *  TODO:
  *  1) currently, this just overwrites not yet flushed data
  *     there should be at least an overwrite indicator in the output
- *  2) use atomic updates for writePtr acess
  */
 static void AddLogCore(const char* str, const size_t len)
 {
 	size_t noWrapLen = endPtr - writePtr + 1;
 	if (noWrapLen >= len) {
 		memcpy(writePtr, str, len);
-		vTaskSuspendAll();
-			writePtr += len;
-			if (writePtr > endPtr) writePtr = logBuffer;
-		xTaskResumeAll();
+		char *writePtrCopy = writePtr + len;
+		if (writePtrCopy > endPtr) writePtrCopy = logBuffer;
+		writePtr = writePtrCopy; // atomic
 	}
 	else {
 		memcpy(writePtr, str, noWrapLen);
 		size_t restLen = len - noWrapLen;
 		memcpy(logBuffer, str + noWrapLen, restLen);
-		vTaskSuspendAll();
-			writePtr = logBuffer + restLen;
-		xTaskResumeAll();
+		char *writePtrCopy = logBuffer + restLen;
+		writePtr = writePtrCopy; // atomic
 	}
 }
 
