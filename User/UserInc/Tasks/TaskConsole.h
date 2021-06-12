@@ -10,8 +10,9 @@
 
 #include "UserInc/Logging.h"
 
+void TaskConsole_USART3_DMA_IRQ();
 void TaskConsole_PrepareRTOS();
-void TaskConsole_Run(void const * argument);
+void TaskConsole_Run(void * argument);
 
 void TaskConsole_AddLog(const LogClient_t logClient, const char* str);
 

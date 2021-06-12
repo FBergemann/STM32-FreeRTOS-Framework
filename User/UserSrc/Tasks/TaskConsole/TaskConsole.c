@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "UserInc/Logging.h"
 #include "UserInc/Tasks/TaskConsole.h"
@@ -24,31 +25,47 @@ static char* readPtr  = logBuffer;
 static char* writePtr = logBuffer;
 static char* endPtr = logBuffer + LOG_BUFF_SIZE - 1;
 
-osSemaphoreDef(LogSem);
-osSemaphoreId osSemaphore;
+bool rtosInitialized = false;
+
+osSemaphoreId_t LogSemInstance;
+osSemaphoreId_t UsartDMAInstance;
 
 void TaskConsole_PrepareRTOS()
 {
-	osSemaphore = osSemaphoreCreate(osSemaphore(LogSem), 1);
+	LogSemInstance		= osSemaphoreNew(1, 1, NULL);
+	UsartDMAInstance	= osSemaphoreNew(1, 1, NULL);
+	rtosInitialized		= true;
 }
 
-void TaskConsole_Run(void const * argument)
+void TaskConsole_USART3_DMA_IRQ()
+{
+	if (rtosInitialized) {
+		osStatus_t status;
+		while ((status = osSemaphoreRelease(UsartDMAInstance)) != osOK) { // TODO: error handling
+			;
+		}
+	}
+}
+
+void TaskConsole_Run(void * argument)
 {
 	Log(LC_Console_c, "start TaskConsole...\r\n");
 
+	while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
 	while (1) {
 		char *writePtrCopy = writePtr;
 		if (writePtrCopy != readPtr) {
-			HAL_UART_StateTypeDef x;
 			if (writePtrCopy > readPtr) {
 				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)readPtr, writePtrCopy - readPtr);
 			}
 			else {
+				// TODO: error handling
+				while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
 				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)readPtr, endPtr - readPtr + 1);
-				while ( (x = HAL_UART_GetState(&huart3)) != HAL_UART_STATE_READY); // TODO
+				while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
 				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)logBuffer, writePtrCopy - logBuffer);
 			}
-			while ( (x = HAL_UART_GetState(&huart3)) != HAL_UART_STATE_READY); // TODO
+			while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
 			readPtr = writePtrCopy;
 			continue; // check immediately again, no timeout
 		}
@@ -90,8 +107,8 @@ void TaskConsole_AddLog(const LogClient_t logClient, const char* str)
 	size_t len = lenPrefix + lenStr + 1;
 	if (len > LOG_BUFF_SIZE) return;
 
-	osSemaphoreWait(osSemaphore, 0);
+	osSemaphoreAcquire(LogSemInstance, 0);
 		AddLogCore(prefix, lenPrefix);
 		AddLogCore(str, lenStr + 1);
-	osSemaphoreRelease(osSemaphore);
+	osSemaphoreRelease(LogSemInstance);
 }

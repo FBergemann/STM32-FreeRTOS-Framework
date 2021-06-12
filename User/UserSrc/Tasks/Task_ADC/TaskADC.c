@@ -18,7 +18,7 @@ static char logElem = 0;
 
 #ifdef SIMULATION_ADC
 
-void TaskADC_Run(void const * argument)
+void TaskADC_Run(void * argument)
 {
   Log(LC_ADC_c, "start TaskADC...\r\n");
   int32_t value = 0;
