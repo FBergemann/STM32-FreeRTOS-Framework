@@ -55,27 +55,59 @@ RTC_HandleTypeDef hrtc;
 TIM_HandleTypeDef htim14;
 
 UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart3_tx;
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
-osThreadId defaultTaskHandle;
+/* Definitions for defaultTask */
+osThreadId_t defaultTaskHandle;
+const osThreadAttr_t defaultTask_attributes = {
+  .name = "defaultTask",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* USER CODE BEGIN PV */
 
-osThreadId taskConsoleHandle;
-osThreadId task1Handle;
-osThreadId task3Handle;
-osThreadId taskADCHandle;
+osThreadId_t taskConsoleHandle;
+const osThreadAttr_t taskConsole_attributes = {
+  .name = "taskConsole",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
+osThreadId_t task1Handle;
+const osThreadAttr_t task1_attributes = {
+  .name = "task1",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
+osThreadId_t task3Handle;
+const osThreadAttr_t task3_attributes = {
+  .name = "task3",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
+osThreadId_t taskADCHandle;
+const osThreadAttr_t taskADC_attributes = {
+  .name = "taskADC",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_TIM14_Init(void);
 static void MX_RTC_Init(void);
-void StartDefaultTask(void const * argument);
+void StartDefaultTask(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -114,6 +146,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_TIM14_Init();
@@ -123,6 +156,9 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim14);
 
   /* USER CODE END 2 */
+
+  /* Init scheduler */
+  osKernelInitialize();
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -134,7 +170,6 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
-
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -142,25 +177,20 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 256);
-  defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
+  /* creation of defaultTask */
+  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
-  osThreadDef(TaskConsole, TaskConsole_Run, osPriorityNormal, 0, 256);
-  taskConsoleHandle = osThreadCreate(osThread(TaskConsole), NULL);
-
-  osThreadDef(Task1, Task1_Run, osPriorityNormal, 0, 256);
-  task1Handle = osThreadCreate(osThread(Task1), NULL);
-
-  osThreadDef(Task3, Task3_Run, osPriorityNormal, 0, 256);
-  task3Handle = osThreadCreate(osThread(Task3), NULL);
-
-  osThreadDef(TaskADC, TaskADC_Run, osPriorityNormal, 0, 256);
-  taskADCHandle = osThreadCreate(osThread(TaskADC), NULL);
+  taskConsoleHandle	= osThreadNew(TaskConsole_Run,	NULL, &taskConsole_attributes);
+  task1Handle		= osThreadNew(Task1_Run,		NULL, &task1_attributes);
+  task3Handle		= osThreadNew(Task3_Run,		NULL, &task3_attributes);
+  taskADCHandle		= osThreadNew(TaskADC_Run,		NULL, &taskADC_attributes);
 
   /* USER CODE END RTOS_THREADS */
+
+  /* USER CODE BEGIN RTOS_EVENTS */
+  /* add events, ... */
+  /* USER CODE END RTOS_EVENTS */
 
   /* Start scheduler */
   osKernelStart();
@@ -405,6 +435,22 @@ static void MX_USB_OTG_FS_PCD_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -498,21 +544,13 @@ static void MX_GPIO_Init(void)
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void const * argument)
+void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-  Log(LC_Main_c, "enter run loop...\r\n");
-
-  /* endless loop */
-  int idx = 0;
   for(;;)
   {
-	static char buff[256] = "#...:in run loop...\r\n";
-	LogIntToStr(buff + 1, idx, 3);
-	Log(LC_Main_c, buff);
-	idx = (idx + 1) % 1000;
-	osDelay(5000);
+    osDelay(1);
   }
   /* USER CODE END 5 */
 }

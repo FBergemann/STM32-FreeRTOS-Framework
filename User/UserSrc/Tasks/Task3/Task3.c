@@ -10,7 +10,7 @@
 
 #include "UserInc/Logging.h"
 
-void Task3_Run(void const * argument)
+void Task3_Run(void * argument)
 {
   Log(LC_LED3_c, "start Task3...\r\n");
 

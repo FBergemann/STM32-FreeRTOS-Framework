@@ -8,6 +8,6 @@
 #ifndef USERINC_TASKS_TASK3_H_
 #define USERINC_TASKS_TASK3_H_
 
-void Task3_Run(void const * argument);
+void Task3_Run(void * argument);
 
 #endif /* USERINC_TASKS_TASK3_H_ */

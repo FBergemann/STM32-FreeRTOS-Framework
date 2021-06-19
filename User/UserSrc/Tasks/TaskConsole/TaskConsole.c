@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "UserInc/Logging.h"
 #include "UserInc/Tasks/TaskConsole.h"
@@ -24,25 +25,51 @@ static char* readPtr  = logBuffer;
 static char* writePtr = logBuffer;
 static char* endPtr = logBuffer + LOG_BUFF_SIZE - 1;
 
-osSemaphoreDef(LogSem);
-osSemaphoreId osSemaphore;
+bool rtosInitialized = false;
+
+osSemaphoreId_t LogSemInstance;
+osSemaphoreId_t UsartDMAInstance;
 
 void TaskConsole_PrepareRTOS()
 {
-	osSemaphore = osSemaphoreCreate(osSemaphore(LogSem), 1);
+	LogSemInstance		= osSemaphoreNew(1, 1, NULL);
+	UsartDMAInstance	= osSemaphoreNew(1, 1, NULL);
+	rtosInitialized		= true;
 }
 
-void TaskConsole_Run(void const * argument)
+void TaskConsole_USART3_DMA_IRQ()
+{
+	if (rtosInitialized) {
+		osStatus_t status;
+		while ((status = osSemaphoreRelease(UsartDMAInstance)) != osOK) { // TODO: error handling
+			;
+		}
+	}
+}
+
+void TaskConsole_Run(void * argument)
 {
 	Log(LC_Console_c, "start TaskConsole...\r\n");
 
+	while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
 	while (1) {
-		if (writePtr != readPtr) {
-			HAL_UART_Transmit(&huart3, (uint8_t *)readPtr, 1, 0xFFFF);
-			readPtr += 1;
-			if (readPtr > endPtr) readPtr = logBuffer;
+		char *writePtrCopy = writePtr;
+		if (writePtrCopy != readPtr) {
+			if (writePtrCopy > readPtr) {
+				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)readPtr, writePtrCopy - readPtr);
+			}
+			else {
+				// TODO: error handling
+				while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
+				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)readPtr, endPtr - readPtr + 1);
+				while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
+				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)logBuffer, writePtrCopy - logBuffer);
+			}
+			while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
+			readPtr = writePtrCopy;
+			continue; // check immediately again, no timeout
 		}
-		osDelay(2); // TODO don't use timeout, but interrupt
+		osDelay(1);
 	}
 }
 
@@ -50,21 +77,22 @@ void TaskConsole_Run(void const * argument)
  *  TODO:
  *  1) currently, this just overwrites not yet flushed data
  *     there should be at least an overwrite indicator in the output
- *  2) use atomic updates for writePtr acess
  */
 static void AddLogCore(const char* str, const size_t len)
 {
 	size_t noWrapLen = endPtr - writePtr + 1;
 	if (noWrapLen >= len) {
 		memcpy(writePtr, str, len);
-		writePtr += len;
-		if (writePtr > endPtr) writePtr = logBuffer;
+		char *writePtrCopy = writePtr + len;
+		if (writePtrCopy > endPtr) writePtrCopy = logBuffer;
+		writePtr = writePtrCopy; // atomic
 	}
 	else {
 		memcpy(writePtr, str, noWrapLen);
 		size_t restLen = len - noWrapLen;
 		memcpy(logBuffer, str + noWrapLen, restLen);
-		writePtr = logBuffer + restLen;
+		char *writePtrCopy = logBuffer + restLen;
+		writePtr = writePtrCopy; // atomic
 	}
 }
 
@@ -79,8 +107,8 @@ void TaskConsole_AddLog(const LogClient_t logClient, const char* str)
 	size_t len = lenPrefix + lenStr + 1;
 	if (len > LOG_BUFF_SIZE) return;
 
-	osSemaphoreWait(osSemaphore, 0);
-	AddLogCore(prefix, lenPrefix);
-	AddLogCore(str, lenStr + 1);
-	osSemaphoreRelease(osSemaphore);
+	osSemaphoreAcquire(LogSemInstance, 0);
+		AddLogCore(prefix, lenPrefix);
+		AddLogCore(str, lenStr + 1);
+	osSemaphoreRelease(LogSemInstance);
 }
