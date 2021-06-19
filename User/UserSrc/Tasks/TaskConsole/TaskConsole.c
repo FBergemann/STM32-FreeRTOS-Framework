@@ -51,11 +51,11 @@ void TaskConsole_Run(void * argument)
 {
 	Log(LC_Console_c, "start TaskConsole...\r\n");
 
-	while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
 	while (1) {
 		char *writePtrCopy = writePtr;
 		if (writePtrCopy != readPtr) {
 			if (writePtrCopy > readPtr) {
+				while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
 				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)readPtr, writePtrCopy - readPtr);
 			}
 			else {
@@ -65,7 +65,6 @@ void TaskConsole_Run(void * argument)
 				while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
 				HAL_UART_Transmit_DMA(&huart3, (uint8_t*)logBuffer, writePtrCopy - logBuffer);
 			}
-			while (osSemaphoreAcquire(UsartDMAInstance, 0) != osOK) { ; }
 			readPtr = writePtrCopy;
 			continue; // check immediately again, no timeout
 		}
