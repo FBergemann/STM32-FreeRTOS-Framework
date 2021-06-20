@@ -20,6 +20,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "cmsis_os.h"
+#include "fatfs.h"
 #include "usb_host.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -148,6 +149,7 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM14_Init();
   MX_RTC_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_Base_Start_IT(&htim14);
