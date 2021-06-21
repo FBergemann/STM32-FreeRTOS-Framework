@@ -11,6 +11,7 @@
 typedef enum {
 	LC_Main_c = 0,
 	LC_Console_c,
+	LC_USB_c,
 	LC_LED1_c,
 	LC_LED2_c,
 	LC_LED3_c,

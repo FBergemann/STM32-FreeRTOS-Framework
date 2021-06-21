@@ -27,6 +27,8 @@
 
 /* USER CODE BEGIN Includes */
 
+#include "UserInc/Tasks/TaskUSB.h"
+
 /* USER CODE END Includes */
 
 /* USER CODE BEGIN PV */
@@ -103,14 +105,17 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
 
   case HOST_USER_DISCONNECTION:
   Appli_state = APPLICATION_DISCONNECT;
+  TaskUSB_ApplicationDisconnect();
   break;
 
   case HOST_USER_CLASS_ACTIVE:
   Appli_state = APPLICATION_READY;
+  TaskUSB_ApplicationReady();
   break;
 
   case HOST_USER_CONNECTION:
   Appli_state = APPLICATION_START;
+  TaskUSB_ApplicationStart();
   break;
 
   default:

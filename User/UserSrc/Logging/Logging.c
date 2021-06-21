@@ -28,6 +28,7 @@ char* LogClientID2String(const LogClient_t logClient)
 	switch (logClient) {
 	case LC_Main_c:		return "M  "; break;
 	case LC_Console_c:	return "CON"; break;
+	case LC_USB_c:		return "USB"; break;
 	case LC_LED1_c:		return "L1 "; break;
 	case LC_LED2_c:		return "L2 "; break;
 	case LC_LED3_c:		return "L3 "; break;
