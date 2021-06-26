@@ -12,15 +12,15 @@
 
 void TaskUSB_ApplicationStart()
 {
-	Log(LC_USB_c, "ApplicationStart");
+	Log(LC_USB_c, "ApplicationStart\r\n");
 }
 
 void TaskUSB_ApplicationReady()
 {
-	Log(LC_USB_c, "ApplicationReady");
+	Log(LC_USB_c, "ApplicationReady\r\n");
 }
 
 void TaskUSB_ApplicationDisconnect()
 {
-	Log(LC_USB_c, "ApplicationDisconnect");
+	Log(LC_USB_c, "ApplicationDisconnect\r\n");
 }
