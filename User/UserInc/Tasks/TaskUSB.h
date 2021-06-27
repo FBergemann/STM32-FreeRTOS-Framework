@@ -12,4 +12,7 @@ void TaskUSB_ApplicationStart();
 void TaskUSB_ApplicationReady();
 void TaskUSB_ApplicationDisconnect();
 
+void TaskUSB_PrepareRTOS();
+void TaskUSB_Run(void * argument);
+
 #endif /* USERINC_TASKS_TASKUSB_H_ */

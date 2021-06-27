@@ -29,6 +29,7 @@
 #include "UserInc/Logging.h"
 
 #include "UserInc/Tasks/TaskConsole.h"
+#include "UserInc/Tasks/TaskUSB.h"
 #include "UserInc/Tasks/Task1.h"
 #include "UserInc/Tasks/Task2.h"
 #include "UserInc/Tasks/Task3.h"
@@ -71,6 +72,13 @@ const osThreadAttr_t defaultTask_attributes = {
 osThreadId_t taskConsoleHandle;
 const osThreadAttr_t taskConsole_attributes = {
   .name = "taskConsole",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
+
+osThreadId_t taskUSBHandle;
+const osThreadAttr_t taskUSB_attributes = {
+  .name = "taskUSB",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
@@ -165,6 +173,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
   TaskConsole_PrepareRTOS();
+  TaskUSB_PrepareRTOS();
   /* USER CODE END RTOS_SEMAPHORES */
 
   /* USER CODE BEGIN RTOS_TIMERS */
@@ -181,6 +190,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   taskConsoleHandle	= osThreadNew(TaskConsole_Run,	NULL, &taskConsole_attributes);
+  taskUSBHandle		= osThreadNew(TaskUSB_Run,		NULL, &taskUSB_attributes);
   task1Handle		= osThreadNew(Task1_Run,		NULL, &task1_attributes);
   task3Handle		= osThreadNew(Task3_Run,		NULL, &task3_attributes);
   taskADCHandle		= osThreadNew(TaskADC_Run,		NULL, &taskADC_attributes);
