@@ -12,6 +12,8 @@
 
 #include "UserInc/Logging.h"
 
+#undef ACTIVATE
+
 typedef enum {
 	Start_c = 0,
 	Ready_c,
@@ -31,19 +33,19 @@ static void Disconnect();
 
 void TaskUSB_ApplicationStart()
 {
-	Log(LC_USB_c, "ApplicationStart\r\n");
+	// Log(LC_USB_c, "ApplicationStart\r\n");
 	sState = Start_c;
 }
 
 void TaskUSB_ApplicationReady()
 {
-	Log(LC_USB_c, "ApplicationReady\r\n");
+	// Log(LC_USB_c, "ApplicationReady\r\n");
 	sState = Ready_c;
 }
 
 void TaskUSB_ApplicationDisconnect()
 {
-	Log(LC_USB_c, "ApplicationDisconnect\r\n");
+	// Log(LC_USB_c, "ApplicationDisconnect\r\n");
 	sState = Disconnect_c;
 }
 
@@ -83,7 +85,7 @@ static void Start()
 
 static void Ready()
 {
-#if 0
+#if defined(ACTIVATE)
 	FRESULT res;                                          /* FatFs function common result code */
 	uint32_t byteswritten, bytesread;                     /* File write/read counts */
 	uint8_t wtext[] = "This is STM32 working with FatFs"; /* File write buffer */
@@ -91,7 +93,7 @@ static void Ready()
 #endif
 	Log(LC_USB_c, "ready...\r\n");
 
-#if 0
+#if defined(ACTIVATE)
 	/* Register the file system object to the FatFs module */
 	if(f_mount(&USBDISKFatFs, (TCHAR const*)USBDISKPath, 0) != FR_OK)
 	{
@@ -121,6 +123,7 @@ static void Ready()
         /* Close the open text file */
         f_close(&MyFile);
 
+#if 0
         /* Open the text file object with read access */
         if(f_open(&MyFile, "STM32FBE.TXT", FA_READ) != FR_OK)
         {
@@ -150,6 +153,7 @@ static void Ready()
             }
           }
         }
+#endif
       }
 #endif
 }
