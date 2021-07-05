@@ -16,6 +16,7 @@ typedef enum {
 	LC_LED2_c,
 	LC_LED3_c,
 	LC_ADC_c,
+	LC_PWM_c,
 	LC_EOL_c, 	// end marker
 } LogClient_t;
 

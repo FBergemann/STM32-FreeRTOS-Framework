@@ -343,7 +343,7 @@
                     					
                     <sourceEntries>
                         						
-                        <entry excluding="Inc2" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="User"/>
+                        <entry excluding="UserSrc/Tasks/TaskPWM|Inc2" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="User"/>
                         						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="USB_HOST"/>
                         						

@@ -33,6 +33,7 @@ char* LogClientID2String(const LogClient_t logClient)
 	case LC_LED2_c:		return "L2 "; break;
 	case LC_LED3_c:		return "L3 "; break;
 	case LC_ADC_c:		return "ADC"; break;
+	case LC_PWM_c:		return "PWM"; break;
 	case LC_EOL_c:		return "EOL"; break;
 	}
 	return "?  ";
