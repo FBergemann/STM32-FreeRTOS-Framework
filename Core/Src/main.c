@@ -106,6 +106,12 @@ const osThreadAttr_t taskADC_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 
+osThreadId_t taskPWMHandle;
+const osThreadAttr_t taskPWM_attributes = {
+  .name = "taskPWM",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
+};
 
 /* USER CODE END PV */
 
@@ -199,6 +205,7 @@ int main(void)
   task1Handle		= osThreadNew(Task1_Run,		NULL, &task1_attributes);
   task3Handle		= osThreadNew(Task3_Run,		NULL, &task3_attributes);
   taskADCHandle		= osThreadNew(TaskADC_Run,		NULL, &taskADC_attributes);
+  taskPWMHandle		= osThreadNew(TaskPWM_Run,		NULL, &taskPWM_attributes);
 
   /* USER CODE END RTOS_THREADS */
 
@@ -383,7 +390,7 @@ static void MX_TIM5_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 31250;
+  sConfigOC.Pulse = 1000;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim5, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
@@ -566,7 +573,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
   /* USER CODE BEGIN Callback 1 */
   else if (htim->Instance == TIM5) {
-	TaskPWM_Interrupt();
+	TaskPWM_Interrupt(htim);
   }
   else if (htim->Instance == TIM14) {
     Task2_Interrupt();

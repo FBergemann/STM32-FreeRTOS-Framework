@@ -8,6 +8,7 @@
 #ifndef USERINC_TASKS_TASKPWM_H_
 #define USERINC_TASKS_TASKPWM_H_
 
-void TaskPWM_Interrupt();
+void TaskPWM_Interrupt(TIM_HandleTypeDef * htim5);
+void TaskPWM_Run(void * argument);
 
 #endif /* USERINC_TASKS_TASKPWM_H_ */
