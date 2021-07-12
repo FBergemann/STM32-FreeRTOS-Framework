@@ -8,12 +8,76 @@
 #include <main.h>
 #include <cmsis_os.h>
 
+#include <stdint.h> // UINT32_MAX
+
 #include "UserInc/Logging.h"
 #include "UserInc/TimerTick.h"
 
+extern TIM_HandleTypeDef htim5;
+
+typedef struct {
+uint16_t prescaler;
+uint32_t counterPeriod;
+uint32_t pulseLength;
+} PWMSettings_t;
+
+/*
+ * demo PWM settings to test varying over time
+ */
+static PWMSettings_t pwmSettings[] = {
+{ 2687,	31249, 	1000 },
+{ 2687,	31249, 	1000 },
+{ 2687,	31249, 	1000 },
+{ 2687,	31249, 	1000 },
+{ 2687,	31249, 	1000 },
+
+{ 2687,	3124, 	1000 },
+{ 2687,	3124, 	1000 },
+{ 2687,	3124, 	1000 },
+{ 2687,	3124, 	1000 },
+{ 2687,	3124, 	1000 },
+
+{ 2687,	312, 	1000 },
+{ 2687,	312, 	1000 },
+{ 2687,	312, 	1000 },
+{ 2687,	312, 	1000 },
+{ 2687,	312, 	1000 },
+
+{ 2687,	31, 	1000 },
+{ 2687,	31, 	1000 },
+{ 2687,	31, 	1000 },
+{ 2687,	31, 	1000 },
+{ 2687,	31, 	1000 },
+};
+
+/*
+ * number of settings in pwmSettings
+ */
+static const int PWMSettingsNo = sizeof(pwmSettings) / sizeof(PWMSettings_t);
+
+/*
+ * indexing pwmSettings
+ */
+static int PWMSettingsIndex = 0;
+
+/*
+ * main routine interval
+ */
 static TickType_t sInterval = TASK_DELAY_S(1);
+
+/*
+ * main routine interval wake-up time
+ */
 static TickType_t xLastWakeTime = 0;
+
+/*
+ * pulse counter updated in IRQ (wrap-around)
+ */
 static uint32_t sCounter = 0;
+
+/*
+ * log message for the main routine
+ */
 static char sBuff[] = "TaskPWM: pulses = #.....\r\n";
 
 void TaskPWM_Interrupt(TIM_HandleTypeDef *htim5)
@@ -43,6 +107,7 @@ void TaskPWM_Run(void * argument)
 	uint32_t lastCounter = 0;
 	uint32_t copyCounter;
 	uint32_t counterDiff;
+	int oldPWMSettingsIndex;
 
 	LogWait4Ready();
 
@@ -51,10 +116,40 @@ void TaskPWM_Run(void * argument)
 	while (1) {
 		xLastWakeTime = xTaskGetTickCount();				// get timer tick timestamp
 
+		/*
+		 * calculate IRQ counter difference for interval
+		 */
 		copyCounter = sCounter;
-		counterDiff = copyCounter - lastCounter;
+		if (lastCounter <= copyCounter) {
+			counterDiff = copyCounter - lastCounter;
+		}
+		else {
+			counterDiff = UINT32_MAX - lastCounter + copyCounter + 1;
+		}
+
 		lastCounter = copyCounter;
 
+		/*
+		 * update PWM settings
+		 */
+
+		// old settings
+		oldPWMSettingsIndex = PWMSettingsIndex;
+		// index for next settings (wrap around)
+		PWMSettingsIndex += 1;
+		PWMSettingsIndex %= PWMSettingsNo;
+
+		if (pwmSettings[oldPWMSettingsIndex].prescaler == pwmSettings[PWMSettingsIndex].prescaler) {
+			// update while running
+			TIM5->ARR = pwmSettings[PWMSettingsIndex].counterPeriod;
+		}
+		else {
+			// stop and re-start timer to avoid
+		}
+
+		/*
+		 * log info message
+		 */
 		LogUInt32ToStr(sBuff + 19, counterDiff, 5);
 		Log(LC_PWM_c, sBuff);
 
