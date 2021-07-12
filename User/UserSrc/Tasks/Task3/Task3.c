@@ -12,10 +12,12 @@
 
 void Task3_Run(void * argument)
 {
-  Log(LC_LED3_c, "start Task3...\r\n");
+	LogWait4Ready();
 
-  while (1) {
-    HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
-    osDelay(125);
-  }
+	Log(LC_LED3_c, "start Task3...\r\n");
+
+	while (1) {
+		HAL_GPIO_TogglePin(LD3_GPIO_Port, LD3_Pin);
+		osDelay(125);
+	}
 }

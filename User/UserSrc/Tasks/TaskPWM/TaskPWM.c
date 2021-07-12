@@ -11,11 +11,14 @@
 #include "UserInc/Logging.h"
 #include "UserInc/TimerTick.h"
 
-static TickType_t sInterval = TASK_DELAY_S(5);
+static TickType_t sInterval = TASK_DELAY_S(1);
 static TickType_t xLastWakeTime = 0;
+static uint32_t sCounter = 0;
+static char sBuff[] = "TaskPWM: pulses = #.....\r\n";
 
 void TaskPWM_Interrupt(TIM_HandleTypeDef *htim5)
 {
+#if 0
 //	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 	if (htim5 == NULL) {
 		Log(LC_PWM_c, "tick...\r\n");
@@ -31,18 +34,29 @@ void TaskPWM_Interrupt(TIM_HandleTypeDef *htim5)
 			Log(LC_PWM_c, "tick - channel #2\r\n");
 		}
 	}
+#endif
+	sCounter += 1;
 }
 
 void TaskPWM_Run(void * argument)
 {
+	uint32_t lastCounter = 0;
+	uint32_t copyCounter;
+	uint32_t counterDiff;
+
+	LogWait4Ready();
+
 	Log(LC_PWM_c, "start TaskPWM...\r\n");
 
 	while (1) {
 		xLastWakeTime = xTaskGetTickCount();				// get timer tick timestamp
-		Log(LC_PWM_c, "TaskPWM loop\r\n");
 
-		// TODO: dummy
-		osDelay(300);
+		copyCounter = sCounter;
+		counterDiff = copyCounter - lastCounter;
+		lastCounter = copyCounter;
+
+		LogUInt32ToStr(sBuff + 19, counterDiff, 5);
+		Log(LC_PWM_c, sBuff);
 
 		vTaskDelayUntil( &xLastWakeTime, sInterval);		// wait for remaining #sInterval ticks for next cycle
 	};

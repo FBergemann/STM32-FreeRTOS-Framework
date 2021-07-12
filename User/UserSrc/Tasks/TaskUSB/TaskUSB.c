@@ -56,6 +56,8 @@ void TaskUSB_PrepareRTOS()
 
 void TaskUSB_Run(void * argument)
 {
+	LogWait4Ready();
+
 	Log(LC_USB_c, "start TaskUSB...\r\n");
 	State_t lastState = sState;
 

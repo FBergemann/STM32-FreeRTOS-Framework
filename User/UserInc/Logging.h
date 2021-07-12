@@ -20,11 +20,13 @@ typedef enum {
 	LC_EOL_c, 	// end marker
 } LogClient_t;
 
+void	LogWait4Ready();
 void	Log(const LogClient_t logClient, const char* str);
 char*	LogClientID2String(const LogClient_t logClient);
 char* 	LogMakePrefix(const LogClient_t logClient, size_t* lenPrefix);
 
 // conversions
 void	LogIntToStr(char *dest, int value, int digits);
+void 	LogUInt32ToStr(char *dest, uint32_t value, int digits);
 
 #endif /* USERINC_LOGGING_H_ */

@@ -26,6 +26,7 @@ static char* writePtr = logBuffer;
 static char* endPtr = logBuffer + LOG_BUFF_SIZE - 1;
 
 bool rtosInitialized = false;
+static bool ready = false;
 
 osSemaphoreId_t LogSemInstance;
 osSemaphoreId_t UsartDMAInstance;
@@ -49,6 +50,8 @@ void TaskConsole_USART3_DMA_IRQ()
 
 void TaskConsole_Run(void * argument)
 {
+	ready = true;
+
 	Log(LC_Console_c, "start TaskConsole...\r\n");
 
 	while (1) {
@@ -110,4 +113,12 @@ void TaskConsole_AddLog(const LogClient_t logClient, const char* str)
 		AddLogCore(prefix, lenPrefix);
 		AddLogCore(str, lenStr + 1);
 	osSemaphoreRelease(LogSemInstance);
+}
+
+void TaskConsole_WaitReady()
+{
+	while (1) {
+		if (ready) break;
+		osDelay(100);
+	}
 }

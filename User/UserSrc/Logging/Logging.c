@@ -18,6 +18,11 @@ static char prefixPrototype[] = "2021-05-01 12:30:00.123:ADC:";
 // each client has it's own log prefix, to update that lock-free
 static char logPrefix[LC_EOL_c + 1][sizeof(prefixPrototype)];
 
+void LogWait4Ready()
+{
+	TaskConsole_WaitReady();
+}
+
 void Log(const LogClient_t logClient, const char* str)
 {
 	TaskConsole_AddLog(logClient, str);
@@ -56,6 +61,17 @@ char* LogClientID2String(const LogClient_t logClient)
 }
 
 void LogIntToStr(char *dest, int value, int digits)
+{
+	if (dest == NULL) return;
+	digits = digits - 1;
+	while (digits >= 0) {
+		dest[digits] = (value % 10) + '0';
+		value = value / 10;
+		digits = digits -1;
+	}
+}
+
+void LogUInt32ToStr(char *dest, uint32_t value, int digits)
 {
 	if (dest == NULL) return;
 	digits = digits - 1;
