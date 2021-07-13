@@ -27,14 +27,21 @@
 /* USER CODE BEGIN Includes */
 
 #include "UserInc/Logging.h"
+#include "UserInc/Features.h"
 
 #include "UserInc/Tasks/TaskConsole.h"
 #include "UserInc/Tasks/TaskUSB.h"
 #include "UserInc/Tasks/Task1.h"
 #include "UserInc/Tasks/Task2.h"
 #include "UserInc/Tasks/Task3.h"
+
+#if ( ENABLE_ADC == 1 )
 #include "UserInc/Tasks/TaskADC.h"
+#endif
+
+#if ( ENABLE_PWM == 1 )
 #include "UserInc/Tasks/TaskPWM.h"
+#endif
 
 /* USER CODE END Includes */
 
@@ -66,7 +73,7 @@ DMA_HandleTypeDef hdma_usart3_tx;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 128 * 4,
+  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
@@ -74,44 +81,48 @@ const osThreadAttr_t defaultTask_attributes = {
 osThreadId_t taskConsoleHandle;
 const osThreadAttr_t taskConsole_attributes = {
   .name = "taskConsole",
-  .stack_size = 128 * 4,
+  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
 osThreadId_t taskUSBHandle;
 const osThreadAttr_t taskUSB_attributes = {
   .name = "taskUSB",
-  .stack_size = 128 * 4,
+  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
 osThreadId_t task1Handle;
 const osThreadAttr_t task1_attributes = {
   .name = "task1",
-  .stack_size = 128 * 4,
+  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
 osThreadId_t task3Handle;
 const osThreadAttr_t task3_attributes = {
   .name = "task3",
-  .stack_size = 128 * 4,
+  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
+#if ( ENABLE_ADC == 1 )
 osThreadId_t taskADCHandle;
 const osThreadAttr_t taskADC_attributes = {
   .name = "taskADC",
-  .stack_size = 128 * 4,
+  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+#endif
 
+#if ( ENABLE_PWM == 1 )
 osThreadId_t taskPWMHandle;
 const osThreadAttr_t taskPWM_attributes = {
   .name = "taskPWM",
-  .stack_size = 128 * 4,
+  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+#endif
 
 /* USER CODE END PV */
 
@@ -204,8 +215,12 @@ int main(void)
   taskUSBHandle		= osThreadNew(TaskUSB_Run,		NULL, &taskUSB_attributes);
   task1Handle		= osThreadNew(Task1_Run,		NULL, &task1_attributes);
   task3Handle		= osThreadNew(Task3_Run,		NULL, &task3_attributes);
+#if ( ENABLE_ADC == 1 )
   taskADCHandle		= osThreadNew(TaskADC_Run,		NULL, &taskADC_attributes);
+#endif
+#if ( ENABLE_PWM == 1 )
   taskPWMHandle		= osThreadNew(TaskPWM_Run,		NULL, &taskPWM_attributes);
+#endif
 
   /* USER CODE END RTOS_THREADS */
 
@@ -481,7 +496,7 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Stream3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 5, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 6, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
 
 }

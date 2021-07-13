@@ -5,6 +5,9 @@
  *      Author: frank
  */
 
+#include "UserInc/Features.h"
+
+#if ( ENABLE_ADC == 1 )
 
 #include "main.h"
 #include <cmsis_os.h>
@@ -49,5 +52,7 @@ void TaskADC_Run(void const * argument)
     osDelay(500);
   }
 }
+
+#endif
 
 #endif

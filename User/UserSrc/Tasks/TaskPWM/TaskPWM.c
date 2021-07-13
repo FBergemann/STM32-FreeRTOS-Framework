@@ -5,6 +5,10 @@
  *      Author: frank
  */
 
+#include "UserInc/Features.h"
+
+#if ( ENABLE_PWM == 1 )
+
 #include <main.h>
 #include <cmsis_os.h>
 
@@ -25,6 +29,7 @@ uint32_t pulseLength;
  * demo PWM settings to test varying over time
  */
 static PWMSettings_t pwmSettings[] = {
+// 1) updating counter period, only
 { 2687,	31249, 	1000 },
 { 2687,	31249, 	1000 },
 { 2687,	31249, 	1000 },
@@ -48,6 +53,22 @@ static PWMSettings_t pwmSettings[] = {
 { 2687,	31, 	1000 },
 { 2687,	31, 	1000 },
 { 2687,	31, 	1000 },
+
+// 2) updating prescaler, only
+
+{ 2000,	31, 	1000 },
+{ 2000,	31, 	1000 },
+{ 2000,	31, 	1000 },
+{ 2000,	31, 	1000 },
+{ 2000,	31, 	1000 },
+
+{ 100,	31, 	1000 },
+{ 100,	31, 	1000 },
+{ 100,	31, 	1000 },
+{ 100,	31, 	1000 },
+{ 100,	31, 	1000 },
+
+// 3) updating both: prescaler and counter period
 };
 
 /*
@@ -78,7 +99,7 @@ static uint32_t sCounter = 0;
 /*
  * log message for the main routine
  */
-static char sBuff[] = "TaskPWM: pulses = #.....\r\n";
+static char sBuff[] = "pulses = #.....\r\n";
 
 void TaskPWM_Interrupt(TIM_HandleTypeDef *htim5)
 {
@@ -139,20 +160,22 @@ void TaskPWM_Run(void * argument)
 		PWMSettingsIndex += 1;
 		PWMSettingsIndex %= PWMSettingsNo;
 
-		if (pwmSettings[oldPWMSettingsIndex].prescaler == pwmSettings[PWMSettingsIndex].prescaler) {
-			// update while running
-			TIM5->ARR = pwmSettings[PWMSettingsIndex].counterPeriod;
+		if (pwmSettings[oldPWMSettingsIndex].prescaler != pwmSettings[PWMSettingsIndex].prescaler) {
+			TIM5->PSC = pwmSettings[PWMSettingsIndex].prescaler;
 		}
-		else {
-			// stop and re-start timer to avoid
+
+		if (pwmSettings[oldPWMSettingsIndex].counterPeriod != pwmSettings[PWMSettingsIndex].counterPeriod) {
+			TIM5->ARR = pwmSettings[PWMSettingsIndex].counterPeriod;
 		}
 
 		/*
 		 * log info message
 		 */
-		LogUInt32ToStr(sBuff + 19, counterDiff, 5);
+		LogUInt32ToStr(sBuff + 10, counterDiff, 5);
 		Log(LC_PWM_c, sBuff);
 
 		vTaskDelayUntil( &xLastWakeTime, sInterval);		// wait for remaining #sInterval ticks for next cycle
 	};
 }
+
+#endif
