@@ -17,58 +17,56 @@
 #include "UserInc/Logging.h"
 #include "UserInc/TimerTick.h"
 
-extern TIM_HandleTypeDef htim5;
-
 typedef struct {
-uint16_t prescaler;
-uint32_t counterPeriod;
-uint32_t pulseLength;
+	uint16_t prescaler;			// prescaler
+	uint32_t counterPeriod;		// counter period
+	uint32_t dutyCycle;			// percentage (will be re-calculated)
 } PWMSettings_t;
 
 /*
  * demo PWM settings to test varying over time
  */
 static PWMSettings_t pwmSettings[] = {
-// 1) updating counter period, only
-{ 2687,	31249, 	1000 },
-{ 2687,	31249, 	1000 },
-{ 2687,	31249, 	1000 },
-{ 2687,	31249, 	1000 },
-{ 2687,	31249, 	1000 },
+	// 1) updating counter period, only
+	{ 2687,	31249, 	50 },
+	{ 2687,	31249, 	50 },
+	{ 2687,	31249, 	50 },
+	{ 2687,	31249, 	50 },
+	{ 2687,	31249, 	50 },
 
-{ 2687,	3124, 	1000 },
-{ 2687,	3124, 	1000 },
-{ 2687,	3124, 	1000 },
-{ 2687,	3124, 	1000 },
-{ 2687,	3124, 	1000 },
+	{ 2687,	3124, 	50 },
+	{ 2687,	3124, 	50 },
+	{ 2687,	3124, 	50 },
+	{ 2687,	3124, 	50 },
+	{ 2687,	3124, 	50 },
 
-{ 2687,	312, 	1000 },
-{ 2687,	312, 	1000 },
-{ 2687,	312, 	1000 },
-{ 2687,	312, 	1000 },
-{ 2687,	312, 	1000 },
+	{ 2687,	312, 	50 },
+	{ 2687,	312, 	50 },
+	{ 2687,	312, 	50 },
+	{ 2687,	312, 	50 },
+	{ 2687,	312, 	50 },
 
-{ 2687,	31, 	1000 },
-{ 2687,	31, 	1000 },
-{ 2687,	31, 	1000 },
-{ 2687,	31, 	1000 },
-{ 2687,	31, 	1000 },
+	{ 2687,	31, 	50 },
+	{ 2687,	31, 	50 },
+	{ 2687,	31, 	50 },
+	{ 2687,	31, 	50 },
+	{ 2687,	31, 	50 },
 
-// 2) updating prescaler, only
+	// 2) updating prescaler, only
 
-{ 2000,	31, 	1000 },
-{ 2000,	31, 	1000 },
-{ 2000,	31, 	1000 },
-{ 2000,	31, 	1000 },
-{ 2000,	31, 	1000 },
+	{ 2000,	31, 	50 },
+	{ 2000,	31, 	50 },
+	{ 2000,	31, 	50 },
+	{ 2000,	31, 	50 },
+	{ 2000,	31, 	50 },
 
-{ 100,	31, 	1000 },
-{ 100,	31, 	1000 },
-{ 100,	31, 	1000 },
-{ 100,	31, 	1000 },
-{ 100,	31, 	1000 },
+	{ 100,	31, 	50 },
+	{ 100,	31, 	50 },
+	{ 100,	31, 	50 },
+	{ 100,	31, 	50 },
+	{ 100,	31, 	50 },
 
-// 3) updating both: prescaler and counter period
+	// 3) updating both: prescaler and counter period
 };
 
 /*
@@ -123,6 +121,16 @@ void TaskPWM_Interrupt(TIM_HandleTypeDef *htim5)
 	sCounter += 1;
 }
 
+/*
+ * calculate absolute values for dutyCycle from percentage
+ */
+static void UpdateSettings()
+{
+	for (int i = 0; i < PWMSettingsNo; ++i) {
+		pwmSettings[i].dutyCycle = pwmSettings[i].dutyCycle * pwmSettings[i].counterPeriod / 100;
+	}
+}
+
 void TaskPWM_Run(void * argument)
 {
 	uint32_t lastCounter = 0;
@@ -133,6 +141,8 @@ void TaskPWM_Run(void * argument)
 	LogWait4Ready();
 
 	Log(LC_PWM_c, "start TaskPWM...\r\n");
+
+	UpdateSettings();
 
 	while (1) {
 		xLastWakeTime = xTaskGetTickCount();				// get timer tick timestamp
@@ -156,16 +166,22 @@ void TaskPWM_Run(void * argument)
 
 		// old settings
 		oldPWMSettingsIndex = PWMSettingsIndex;
-		// index for next settings (wrap around)
+
+		// index for new settings (wrap around)
 		PWMSettingsIndex += 1;
 		PWMSettingsIndex %= PWMSettingsNo;
 
+		// updates:
 		if (pwmSettings[oldPWMSettingsIndex].prescaler != pwmSettings[PWMSettingsIndex].prescaler) {
 			TIM5->PSC = pwmSettings[PWMSettingsIndex].prescaler;
 		}
 
 		if (pwmSettings[oldPWMSettingsIndex].counterPeriod != pwmSettings[PWMSettingsIndex].counterPeriod) {
 			TIM5->ARR = pwmSettings[PWMSettingsIndex].counterPeriod;
+		}
+
+		if (pwmSettings[oldPWMSettingsIndex].dutyCycle != pwmSettings[PWMSettingsIndex].dutyCycle) {
+			TIM5->CCR1 = pwmSettings[PWMSettingsIndex].dutyCycle;
 		}
 
 		/*

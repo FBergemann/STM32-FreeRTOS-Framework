@@ -73,7 +73,7 @@ DMA_HandleTypeDef hdma_usart3_tx;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* USER CODE BEGIN PV */
@@ -81,28 +81,28 @@ const osThreadAttr_t defaultTask_attributes = {
 osThreadId_t taskConsoleHandle;
 const osThreadAttr_t taskConsole_attributes = {
   .name = "taskConsole",
-  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
+  .stack_size = configMINIMAL_STACK_SIZE * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
 osThreadId_t taskUSBHandle;
 const osThreadAttr_t taskUSB_attributes = {
   .name = "taskUSB",
-  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
+  .stack_size = configMINIMAL_STACK_SIZE * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
 osThreadId_t task1Handle;
 const osThreadAttr_t task1_attributes = {
   .name = "task1",
-  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
+  .stack_size = configMINIMAL_STACK_SIZE * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
 osThreadId_t task3Handle;
 const osThreadAttr_t task3_attributes = {
   .name = "task3",
-  .stack_size = configTIMER_TASK_STACK_DEPTH * 4,
+  .stack_size = configMINIMAL_STACK_SIZE * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
 
@@ -405,7 +405,7 @@ static void MX_TIM5_Init(void)
     Error_Handler();
   }
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 1000;
+  sConfigOC.Pulse = 15624;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim5, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
@@ -496,7 +496,7 @@ static void MX_DMA_Init(void)
 
   /* DMA interrupt init */
   /* DMA1_Stream3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 6, 0);
+  HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 5, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream3_IRQn);
 
 }
