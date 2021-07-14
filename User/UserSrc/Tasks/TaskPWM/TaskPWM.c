@@ -66,6 +66,12 @@ static PWMSettings_t pwmSettings[] = {
 	{ 100,	31, 	50 },
 	{ 100,	31, 	50 },
 
+	{ 20,	31, 	50 },
+	{ 20,	31, 	50 },
+	{ 20,	31, 	50 },
+	{ 20,	31, 	50 },
+	{ 20,	31, 	50 },
+
 	// 3) updating both: prescaler and counter period
 };
 
@@ -97,7 +103,7 @@ static uint32_t sCounter = 0;
 /*
  * log message for the main routine
  */
-static char sBuff[] = "pulses = #.....\r\n";
+static char sBuff[] = "pulses = #..........\r\n";
 
 void TaskPWM_Interrupt(TIM_HandleTypeDef *htim5)
 {
@@ -187,7 +193,7 @@ void TaskPWM_Run(void * argument)
 		/*
 		 * log info message
 		 */
-		LogUInt32ToStr(sBuff + 10, counterDiff, 5);
+		LogUInt32ToStr(sBuff + 10, counterDiff, 10);
 		Log(LC_PWM_c, sBuff);
 
 		vTaskDelayUntil( &xLastWakeTime, sInterval);		// wait for remaining #sInterval ticks for next cycle
