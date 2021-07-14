@@ -17,4 +17,4 @@ void TaskPWM_Run(void * argument);
 
 #endif /* USERINC_TASKS_TASKPWM_H_ */
 
-#endif
+#endif // ENABLE_PWM

@@ -72,11 +72,12 @@ static PWMSettings_t pwmSettings[] = {
 	{ 20,	31, 	50 },
 	{ 20,	31, 	50 },
 
-	{ 10,	31, 	50 },
-	{ 10,	31, 	50 },
-	{ 10,	31, 	50 },
-	{ 10,	31, 	50 },
-	{ 10,	31, 	50 },
+	// 1) updating counter period, again
+	{ 20,	17, 	50 },
+	{ 20,	17, 	50 },
+	{ 20,	17, 	50 },
+	{ 20,	17, 	50 },
+	{ 20,	17, 	50 },
 
 	// 3) updating both: prescaler and counter period
 };
@@ -206,4 +207,4 @@ void TaskPWM_Run(void * argument)
 	};
 }
 
-#endif
+#endif // ENABLE_PWM

@@ -42,7 +42,7 @@ void TaskADC_Run(void * argument)
 	}
 }
 
-#else
+#else // SIMULATION_ADC
 
 void TaskADC_Run(void const * argument)
 {
@@ -53,6 +53,6 @@ void TaskADC_Run(void const * argument)
   }
 }
 
-#endif
+#endif // SIMULATION_ADC
 
-#endif
+#endif // ENABLE_ADC

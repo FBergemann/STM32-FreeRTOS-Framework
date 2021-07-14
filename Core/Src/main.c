@@ -85,12 +85,14 @@ const osThreadAttr_t taskConsole_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 
+#if ( ENABLE_USB == 1 )
 osThreadId_t taskUSBHandle;
 const osThreadAttr_t taskUSB_attributes = {
   .name = "taskUSB",
   .stack_size = configMINIMAL_STACK_SIZE * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+#endif
 
 osThreadId_t task1Handle;
 const osThreadAttr_t task1_attributes = {
@@ -212,7 +214,9 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   taskConsoleHandle	= osThreadNew(TaskConsole_Run,	NULL, &taskConsole_attributes);
+#if ( ENABLE_USB == 1 )
   taskUSBHandle		= osThreadNew(TaskUSB_Run,		NULL, &taskUSB_attributes);
+#endif
   task1Handle		= osThreadNew(Task1_Run,		NULL, &task1_attributes);
   task3Handle		= osThreadNew(Task3_Run,		NULL, &task3_attributes);
 #if ( ENABLE_ADC == 1 )

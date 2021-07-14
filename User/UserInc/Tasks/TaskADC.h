@@ -16,4 +16,4 @@ void TaskADC_Run(void * argument);
 
 #endif /* USERINC_TASKS_TASKADC_H_ */
 
-#endif
+#endif // ENABLE_ADC

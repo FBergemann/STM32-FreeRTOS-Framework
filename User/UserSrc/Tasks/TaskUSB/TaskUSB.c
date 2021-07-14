@@ -5,6 +5,10 @@
  *      Author: frank
  */
 
+#include "UserInc/Features.h"
+
+// #if ( ENABLE_USB == 1 )
+
 #include "main.h"
 #include <cmsis_os.h>
 
@@ -164,3 +168,5 @@ static void Disconnect()
 {
 	Log(LC_USB_c, "disconnect...\r\n");
 }
+
+// #endif // ENABLE_USB
