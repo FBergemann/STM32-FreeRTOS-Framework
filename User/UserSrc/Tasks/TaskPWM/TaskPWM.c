@@ -72,6 +72,12 @@ static PWMSettings_t pwmSettings[] = {
 	{ 20,	31, 	50 },
 	{ 20,	31, 	50 },
 
+	{ 10,	31, 	50 },
+	{ 10,	31, 	50 },
+	{ 10,	31, 	50 },
+	{ 10,	31, 	50 },
+	{ 10,	31, 	50 },
+
 	// 3) updating both: prescaler and counter period
 };
 
