@@ -110,7 +110,7 @@ static uint32_t sCounter = 0;
 /*
  * log message for the main routine
  */
-static char sBuff[] = "pulses = #..........\r\n";
+static char sBuff[] = "pulses = #.........., TIM3 ctr = #.....\r\n";
 
 void TaskPWM_Interrupt(TIM_HandleTypeDef *htim5)
 {
@@ -201,6 +201,7 @@ void TaskPWM_Run(void * argument)
 		 * log info message
 		 */
 		LogUInt32ToStr(sBuff + 10, counterDiff, 10);
+		LogUInt16ToStr(sBuff + 34, TIM3->CNT, 5);
 		Log(LC_PWM_c, sBuff);
 
 		vTaskDelayUntil( &xLastWakeTime, sInterval);		// wait for remaining #sInterval ticks for next cycle
