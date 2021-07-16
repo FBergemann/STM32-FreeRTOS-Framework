@@ -110,23 +110,23 @@ static uint32_t sCounter = 0;
 /*
  * log message for the main routine
  */
-static char sBuff[] = "pulses = #.........., TIM3 ctr = #.....\r\n";
+static char sBuff[] = "TIM2 pulses/sec = #.........., TIM5 ctr = #..........\r\n";
 
-void TaskPWM_Interrupt(TIM_HandleTypeDef *htim5)
+void TaskPWM_Interrupt(TIM_HandleTypeDef *htim2)
 {
 #if 0
 //	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	if (htim5 == NULL) {
+	if (htim2 == NULL) {
 		Log(LC_PWM_c, "tick...\r\n");
 	}
-	else if (htim5->Channel == HAL_TIM_ACTIVE_CHANNEL_CLEARED) {
+	else if (htim2->Channel == HAL_TIM_ACTIVE_CHANNEL_CLEARED) {
 		Log(LC_PWM_c, "tick - channel cleared\r\n");
 	}
 	else {
-		if (htim5->Channel & HAL_TIM_ACTIVE_CHANNEL_1) {
+		if (htim2->Channel & HAL_TIM_ACTIVE_CHANNEL_1) {
 			Log(LC_PWM_c, "tick - channel #1\r\n");
 		}
-		if (htim5->Channel & HAL_TIM_ACTIVE_CHANNEL_2) {
+		if (htim2->Channel & HAL_TIM_ACTIVE_CHANNEL_2) {
 			Log(LC_PWM_c, "tick - channel #2\r\n");
 		}
 	}
@@ -186,22 +186,22 @@ void TaskPWM_Run(void * argument)
 
 		// updates:
 		if (pwmSettings[oldPWMSettingsIndex].prescaler != pwmSettings[PWMSettingsIndex].prescaler) {
-			TIM5->PSC = pwmSettings[PWMSettingsIndex].prescaler;
+			TIM2->PSC = pwmSettings[PWMSettingsIndex].prescaler;
 		}
 
 		if (pwmSettings[oldPWMSettingsIndex].counterPeriod != pwmSettings[PWMSettingsIndex].counterPeriod) {
-			TIM5->ARR = pwmSettings[PWMSettingsIndex].counterPeriod;
+			TIM2->ARR = pwmSettings[PWMSettingsIndex].counterPeriod;
 		}
 
 		if (pwmSettings[oldPWMSettingsIndex].dutyCycle != pwmSettings[PWMSettingsIndex].dutyCycle) {
-			TIM5->CCR1 = pwmSettings[PWMSettingsIndex].dutyCycle;
+			TIM2->CCR1 = pwmSettings[PWMSettingsIndex].dutyCycle;
 		}
 
 		/*
 		 * log info message
 		 */
-		LogUInt32ToStr(sBuff + 10, counterDiff, 10);
-		LogUInt16ToStr(sBuff + 34, TIM3->CNT, 5);
+		LogUInt32ToStr(sBuff + 19, counterDiff, 10);
+		LogUInt16ToStr(sBuff + 43, TIM5->CNT, 10);
 		Log(LC_PWM_c, sBuff);
 
 		vTaskDelayUntil( &xLastWakeTime, sInterval);		// wait for remaining #sInterval ticks for next cycle
