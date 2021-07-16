@@ -146,9 +146,12 @@ static void UpdateSettings()
 
 void TaskPWM_Run(void * argument)
 {
-	uint32_t lastCounter = 0;
-	uint32_t copyCounter;
-	uint32_t counterDiff;
+	uint32_t lastCounterTIM2 = 0;
+	uint32_t copyCounterTIM2;
+	uint32_t counterDiffTIM2;
+
+	uint32_t copyCounterTIM5;
+
 	int oldPWMSettingsIndex;
 
 	LogWait4Ready();
@@ -160,18 +163,22 @@ void TaskPWM_Run(void * argument)
 	while (1) {
 		xLastWakeTime = xTaskGetTickCount();				// get timer tick timestamp
 
+		// get TIM5 (slave) counter value
+		copyCounterTIM5 = TIM5->CNT;
+
 		/*
 		 * calculate IRQ counter difference for interval
 		 */
-		copyCounter = sCounter;
-		if (lastCounter <= copyCounter) {
-			counterDiff = copyCounter - lastCounter;
+		copyCounterTIM2 = sCounter;
+
+		if (lastCounterTIM2 <= copyCounterTIM2) {
+			counterDiffTIM2 = copyCounterTIM2 - lastCounterTIM2;
 		}
 		else {
-			counterDiff = UINT32_MAX - lastCounter + copyCounter + 1;
+			counterDiffTIM2 = UINT32_MAX - lastCounterTIM2 + copyCounterTIM2 + 1;
 		}
 
-		lastCounter = copyCounter;
+		lastCounterTIM2 = copyCounterTIM2;
 
 		/*
 		 * update PWM settings
@@ -200,8 +207,8 @@ void TaskPWM_Run(void * argument)
 		/*
 		 * log info message
 		 */
-		LogUInt32ToStr(sBuff + 19, counterDiff, 10);
-		LogUInt16ToStr(sBuff + 43, TIM5->CNT, 10);
+		LogUInt32ToStr(sBuff + 19, counterDiffTIM2, 10);
+		LogUInt32ToStr(sBuff + 43, copyCounterTIM5, 10);
 		Log(LC_PWM_c, sBuff);
 
 		vTaskDelayUntil( &xLastWakeTime, sInterval);		// wait for remaining #sInterval ticks for next cycle
