@@ -188,7 +188,11 @@ int main(void)
 
   HAL_TIM_Base_Start_IT(&htim14);
   HAL_TIM_Base_Start(&htim5);
+#ifdef PWM_LOG_TIM2
   HAL_TIM_PWM_Start_IT(&htim2, TIM_CHANNEL_1);
+#else
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+#endif
 
   /* USER CODE END 2 */
 

@@ -121,7 +121,6 @@ RCC.VCOInputFreq_Value=2000000
 PA14.Mode=Serial_Wire
 VP_SYS_VS_tim1.Mode=TIM1
 PH1/OSC_OUT.Locked=true
-NVIC.TIM2_IRQn=true\:5\:0\:false\:false\:true\:true\:true\:true
 File.Version=6
 Dma.USART3_TX.0.FIFOMode=DMA_FIFOMODE_DISABLE
 PB3.GPIOParameters=GPIO_Label

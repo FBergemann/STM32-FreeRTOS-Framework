@@ -79,6 +79,14 @@ static PWMSettings_t pwmSettings[] = {
 	{ 20,	17, 	50 },
 	{ 20,	17, 	50 },
 
+#if 0
+	// and get higher
+	{ 10,	17, 	50 },
+	{ 10,	17, 	50 },
+	{ 10,	17, 	50 },
+	{ 10,	17, 	50 },
+	{ 10,	17, 	50 },
+#endif
 	// 3) updating both: prescaler and counter period
 };
 
@@ -110,8 +118,13 @@ static uint32_t sCounter = 0;
 /*
  * log message for the main routine
  */
-static char sBuff[] = "TIM2 pulses/sec = #.........., TIM5 ctr = #..........\r\n";
+#ifdef PWM_LOG_TIM2
+static char sBuff[] = "TIM2 pulses/sec = #.........., TIM5 ctr = #.........., diff = #..........\r\n";
+#else
+static char sBuff[] = "TIM5 ctr = #.........., diff = #..........\r\n";
+#endif
 
+#ifdef PWM_LOG_TIM2
 void TaskPWM_Interrupt(TIM_HandleTypeDef *htim2)
 {
 #if 0
@@ -133,7 +146,7 @@ void TaskPWM_Interrupt(TIM_HandleTypeDef *htim2)
 #endif
 	sCounter += 1;
 }
-
+#endif
 /*
  * calculate absolute values for dutyCycle from percentage
  */
@@ -146,11 +159,14 @@ static void UpdateSettings()
 
 void TaskPWM_Run(void * argument)
 {
+#ifdef PWM_LOG_TIM2
 	uint32_t lastCounterTIM2 = 0;
 	uint32_t copyCounterTIM2;
 	uint32_t counterDiffTIM2;
-
+#endif
+	uint32_t lastCounterTIM5 = 0;
 	uint32_t copyCounterTIM5;
+	uint32_t counterDiffTIM5;
 
 	int oldPWMSettingsIndex;
 
@@ -163,9 +179,21 @@ void TaskPWM_Run(void * argument)
 	while (1) {
 		xLastWakeTime = xTaskGetTickCount();				// get timer tick timestamp
 
-		// get TIM5 (slave) counter value
+		/*
+		 * get TIM5 (slave) counter value and diff to previous value
+		 */
 		copyCounterTIM5 = TIM5->CNT;
 
+		if (lastCounterTIM5 <= copyCounterTIM5) {
+			counterDiffTIM5 = copyCounterTIM5 - lastCounterTIM5;
+		}
+		else {
+			counterDiffTIM5 = UINT32_MAX - lastCounterTIM5 + copyCounterTIM5 + 1;
+		}
+
+		lastCounterTIM5 = copyCounterTIM5;
+
+#ifdef PWM_LOG_TIM2
 		/*
 		 * calculate IRQ counter difference for interval
 		 */
@@ -179,6 +207,7 @@ void TaskPWM_Run(void * argument)
 		}
 
 		lastCounterTIM2 = copyCounterTIM2;
+#endif
 
 		/*
 		 * update PWM settings
@@ -207,9 +236,16 @@ void TaskPWM_Run(void * argument)
 		/*
 		 * log info message
 		 */
+#ifdef PWM_LOG_TIM2
 		LogUInt32ToStr(sBuff + 19, counterDiffTIM2, 10);
 		LogUInt32ToStr(sBuff + 43, copyCounterTIM5, 10);
+		LogUInt32ToStr(sBuff + 63, counterDiffTIM5, 10);
 		Log(LC_PWM_c, sBuff);
+#else
+		LogUInt32ToStr(sBuff + 12, copyCounterTIM5, 10);
+		LogUInt32ToStr(sBuff + 32, counterDiffTIM5, 10);
+		Log(LC_PWM_c, sBuff);
+#endif
 
 		vTaskDelayUntil( &xLastWakeTime, sInterval);		// wait for remaining #sInterval ticks for next cycle
 	};
