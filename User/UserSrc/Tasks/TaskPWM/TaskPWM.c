@@ -79,6 +79,14 @@ static PWMSettings_t pwmSettings[] = {
 	{ 20,	17, 	50 },
 	{ 20,	17, 	50 },
 
+#if 0
+	// and get higher
+	{ 10,	17, 	50 },
+	{ 10,	17, 	50 },
+	{ 10,	17, 	50 },
+	{ 10,	17, 	50 },
+	{ 10,	17, 	50 },
+#endif
 	// 3) updating both: prescaler and counter period
 };
 
@@ -110,30 +118,35 @@ static uint32_t sCounter = 0;
 /*
  * log message for the main routine
  */
-static char sBuff[] = "pulses = #..........\r\n";
+#ifdef PWM_LOG_TIM2
+static char sBuff[] = "TIM2 pulses/sec = #.........., TIM5 ctr = #.........., diff = #..........\r\n";
+#else
+static char sBuff[] = "TIM5 ctr = #.........., diff = #..........\r\n";
+#endif
 
-void TaskPWM_Interrupt(TIM_HandleTypeDef *htim5)
+#ifdef PWM_LOG_TIM2
+void TaskPWM_Interrupt(TIM_HandleTypeDef *htim2)
 {
 #if 0
 //	HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-	if (htim5 == NULL) {
+	if (htim2 == NULL) {
 		Log(LC_PWM_c, "tick...\r\n");
 	}
-	else if (htim5->Channel == HAL_TIM_ACTIVE_CHANNEL_CLEARED) {
+	else if (htim2->Channel == HAL_TIM_ACTIVE_CHANNEL_CLEARED) {
 		Log(LC_PWM_c, "tick - channel cleared\r\n");
 	}
 	else {
-		if (htim5->Channel & HAL_TIM_ACTIVE_CHANNEL_1) {
+		if (htim2->Channel & HAL_TIM_ACTIVE_CHANNEL_1) {
 			Log(LC_PWM_c, "tick - channel #1\r\n");
 		}
-		if (htim5->Channel & HAL_TIM_ACTIVE_CHANNEL_2) {
+		if (htim2->Channel & HAL_TIM_ACTIVE_CHANNEL_2) {
 			Log(LC_PWM_c, "tick - channel #2\r\n");
 		}
 	}
 #endif
 	sCounter += 1;
 }
-
+#endif
 /*
  * calculate absolute values for dutyCycle from percentage
  */
@@ -146,9 +159,15 @@ static void UpdateSettings()
 
 void TaskPWM_Run(void * argument)
 {
-	uint32_t lastCounter = 0;
-	uint32_t copyCounter;
-	uint32_t counterDiff;
+#ifdef PWM_LOG_TIM2
+	uint32_t lastCounterTIM2 = 0;
+	uint32_t copyCounterTIM2;
+	uint32_t counterDiffTIM2;
+#endif
+	uint32_t lastCounterTIM5 = 0;
+	uint32_t copyCounterTIM5;
+	uint32_t counterDiffTIM5;
+
 	int oldPWMSettingsIndex;
 
 	LogWait4Ready();
@@ -161,17 +180,34 @@ void TaskPWM_Run(void * argument)
 		xLastWakeTime = xTaskGetTickCount();				// get timer tick timestamp
 
 		/*
-		 * calculate IRQ counter difference for interval
+		 * get TIM5 (slave) counter value and diff to previous value
 		 */
-		copyCounter = sCounter;
-		if (lastCounter <= copyCounter) {
-			counterDiff = copyCounter - lastCounter;
+		copyCounterTIM5 = TIM5->CNT;
+
+		if (lastCounterTIM5 <= copyCounterTIM5) {
+			counterDiffTIM5 = copyCounterTIM5 - lastCounterTIM5;
 		}
 		else {
-			counterDiff = UINT32_MAX - lastCounter + copyCounter + 1;
+			counterDiffTIM5 = UINT32_MAX - lastCounterTIM5 + copyCounterTIM5 + 1;
 		}
 
-		lastCounter = copyCounter;
+		lastCounterTIM5 = copyCounterTIM5;
+
+#ifdef PWM_LOG_TIM2
+		/*
+		 * calculate IRQ counter difference for interval
+		 */
+		copyCounterTIM2 = sCounter;
+
+		if (lastCounterTIM2 <= copyCounterTIM2) {
+			counterDiffTIM2 = copyCounterTIM2 - lastCounterTIM2;
+		}
+		else {
+			counterDiffTIM2 = UINT32_MAX - lastCounterTIM2 + copyCounterTIM2 + 1;
+		}
+
+		lastCounterTIM2 = copyCounterTIM2;
+#endif
 
 		/*
 		 * update PWM settings
@@ -186,22 +222,30 @@ void TaskPWM_Run(void * argument)
 
 		// updates:
 		if (pwmSettings[oldPWMSettingsIndex].prescaler != pwmSettings[PWMSettingsIndex].prescaler) {
-			TIM5->PSC = pwmSettings[PWMSettingsIndex].prescaler;
+			TIM2->PSC = pwmSettings[PWMSettingsIndex].prescaler;
 		}
 
 		if (pwmSettings[oldPWMSettingsIndex].counterPeriod != pwmSettings[PWMSettingsIndex].counterPeriod) {
-			TIM5->ARR = pwmSettings[PWMSettingsIndex].counterPeriod;
+			TIM2->ARR = pwmSettings[PWMSettingsIndex].counterPeriod;
 		}
 
 		if (pwmSettings[oldPWMSettingsIndex].dutyCycle != pwmSettings[PWMSettingsIndex].dutyCycle) {
-			TIM5->CCR1 = pwmSettings[PWMSettingsIndex].dutyCycle;
+			TIM2->CCR1 = pwmSettings[PWMSettingsIndex].dutyCycle;
 		}
 
 		/*
 		 * log info message
 		 */
-		LogUInt32ToStr(sBuff + 10, counterDiff, 10);
+#ifdef PWM_LOG_TIM2
+		LogUInt32ToStr(sBuff + 19, counterDiffTIM2, 10);
+		LogUInt32ToStr(sBuff + 43, copyCounterTIM5, 10);
+		LogUInt32ToStr(sBuff + 63, counterDiffTIM5, 10);
 		Log(LC_PWM_c, sBuff);
+#else
+		LogUInt32ToStr(sBuff + 12, copyCounterTIM5, 10);
+		LogUInt32ToStr(sBuff + 32, counterDiffTIM5, 10);
+		Log(LC_PWM_c, sBuff);
+#endif
 
 		vTaskDelayUntil( &xLastWakeTime, sInterval);		// wait for remaining #sInterval ticks for next cycle
 	};

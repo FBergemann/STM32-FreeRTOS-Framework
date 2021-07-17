@@ -71,6 +71,17 @@ void LogIntToStr(char *dest, int value, int digits)
 	}
 }
 
+void LogUInt16ToStr(char *dest, uint16_t value, int digits)
+{
+	if (dest == NULL) return;
+	digits = digits - 1;
+	while (digits >= 0) {
+		dest[digits] = (value % 10) + '0';
+		value = value / 10;
+		digits = digits -1;
+	}
+}
+
 void LogUInt32ToStr(char *dest, uint32_t value, int digits)
 {
 	if (dest == NULL) return;

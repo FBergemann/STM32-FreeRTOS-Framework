@@ -27,6 +27,7 @@ char* 	LogMakePrefix(const LogClient_t logClient, size_t* lenPrefix);
 
 // conversions
 void	LogIntToStr(char *dest, int value, int digits);
+void 	LogUInt16ToStr(char *dest, uint16_t value, int digits);
 void 	LogUInt32ToStr(char *dest, uint32_t value, int digits);
 
 #endif /* USERINC_LOGGING_H_ */
