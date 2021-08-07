@@ -5,6 +5,10 @@
  *      Author: frank
  */
 
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+
 #ifndef USERINC_LOGGING_H_
 #define USERINC_LOGGING_H_
 
@@ -24,6 +28,8 @@ void	LogWait4Ready();
 void	Log(const LogClient_t logClient, const char* str);
 char*	LogClientID2String(const LogClient_t logClient);
 char* 	LogMakePrefix(const LogClient_t logClient, size_t* lenPrefix);
+void	LogSetSingleMode(LogClient_t client);
+bool	LogIsSingleMode();
 
 // conversions
 void	LogIntToStr(char *dest, int value, int digits);

@@ -13,6 +13,7 @@
 #include <stdbool.h>
 
 #include "UserInc/Logging.h"
+#include "UserInc/Menu.h"
 #include "UserInc/Tasks/TaskConsole.h"
 
 extern UART_HandleTypeDef huart3;
@@ -48,6 +49,25 @@ void TaskConsole_USART3_DMA_IRQ()
 	}
 }
 
+/*
+ * input handling
+ */
+static uint8_t rcvByte;
+static char sKeyMsg[] = "key pressed '###'\r\n";
+
+/*
+ * TOOD it's not good design to have this generic function here, because we are dealing witrh huart3 here, only
+ */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+	if (huart == &huart3) {
+		HAL_UART_Receive(&huart3, &rcvByte, 1, 10);
+	}
+	else {
+		// TODO: error handling?
+	}
+}
+
 void TaskConsole_Run(void * argument)
 {
 	ready = true;
@@ -55,6 +75,27 @@ void TaskConsole_Run(void * argument)
 	Log(LC_Console_c, "start TaskConsole...\r\n");
 
 	while (1) {
+
+		/*
+		 * handle input
+		 * TODO: we don't want to poll, but use callback
+		 */
+		HAL_StatusTypeDef keyPress = HAL_UART_Receive(&huart3, &rcvByte, 1, 10);
+		if (keyPress == HAL_OK) {
+			LogIntToStr(sKeyMsg+13, rcvByte, 3);
+			Log(LC_Console_c, sKeyMsg);
+			if (!LogIsSingleMode()) {
+				LogSetSingleMode(LC_Console_c);
+				MenuStart();
+			}
+			if (MenuHandle(rcvByte)) {
+				LogSetSingleMode(LC_EOL_c);
+			}
+		}
+
+		/*
+		 * transmit logs
+		 */
 		char *writePtrCopy = writePtr;
 		if (writePtrCopy != readPtr) {
 			if (writePtrCopy > readPtr) {

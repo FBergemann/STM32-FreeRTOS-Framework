@@ -8,6 +8,7 @@
 #include <main.h>
 
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "UserInc/Tasks/TaskConsole.h"
 
@@ -15,8 +16,12 @@
 
 // log prefix definition
 static char prefixPrototype[] = "2021-05-01 12:30:00.123:ADC:";
+
 // each client has it's own log prefix, to update that lock-free
 static char logPrefix[LC_EOL_c + 1][sizeof(prefixPrototype)];
+
+// optionall switch to SINGLE client mode - e.g. for LC_Console for the interactive menu
+static LogClient_t sSingleClient = LC_EOL_c;
 
 void LogWait4Ready()
 {
@@ -25,7 +30,9 @@ void LogWait4Ready()
 
 void Log(const LogClient_t logClient, const char* str)
 {
-	TaskConsole_AddLog(logClient, str);
+	if (sSingleClient == LC_EOL_c || sSingleClient == logClient) {
+		TaskConsole_AddLog(logClient, str);
+	}
 }
 
 char* LogClientID2String(const LogClient_t logClient)
@@ -91,4 +98,14 @@ void LogUInt32ToStr(char *dest, uint32_t value, int digits)
 		value = value / 10;
 		digits = digits -1;
 	}
+}
+
+void LogSetSingleMode(LogClient_t client)
+{
+	sSingleClient = client;
+}
+
+bool LogIsSingleMode()
+{
+	return (sSingleClient != LC_EOL_c);
 }

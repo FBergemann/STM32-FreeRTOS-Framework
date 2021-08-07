@@ -79,13 +79,13 @@ static PWMSettings_t pwmSettings[] = {
 	{ 20,	17, 	50 },
 	{ 20,	17, 	50 },
 
-#if 0
+#if 0 // 1,272,723 Hz
 	// and get higher
-	{ 10,	17, 	50 },
-	{ 10,	17, 	50 },
-	{ 10,	17, 	50 },
-	{ 10,	17, 	50 },
-	{ 10,	17, 	50 },
+	{ 5,	10, 	50 },
+	{ 5,	10, 	50 },
+	{ 5,	10, 	50 },
+	{ 5,	10, 	50 },
+	{ 5,	10, 	50 },
 #endif
 	// 3) updating both: prescaler and counter period
 };
@@ -110,6 +110,7 @@ static TickType_t sInterval = TASK_DELAY_S(1);
  */
 static TickType_t xLastWakeTime = 0;
 
+#ifdef PWM_LOG_TIM2
 /*
  * pulse counter updated in IRQ (wrap-around)
  */
@@ -118,7 +119,6 @@ static uint32_t sCounter = 0;
 /*
  * log message for the main routine
  */
-#ifdef PWM_LOG_TIM2
 static char sBuff[] = "TIM2 pulses/sec = #.........., TIM5 ctr = #.........., diff = #..........\r\n";
 #else
 static char sBuff[] = "TIM5 ctr = #.........., diff = #..........\r\n";
