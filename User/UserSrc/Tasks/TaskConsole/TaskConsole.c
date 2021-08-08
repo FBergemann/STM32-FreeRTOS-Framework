@@ -53,7 +53,6 @@ void TaskConsole_USART3_DMA_IRQ()
  * input handling
  */
 static uint8_t rcvByte;
-static char sKeyMsg[] = "key pressed '###'\r\n";
 
 /*
  * TOOD it's not good design to have this generic function here, because we are dealing witrh huart3 here, only
@@ -82,15 +81,7 @@ void TaskConsole_Run(void * argument)
 		 */
 		HAL_StatusTypeDef keyPress = HAL_UART_Receive(&huart3, &rcvByte, 1, 10);
 		if (keyPress == HAL_OK) {
-			LogIntToStr(sKeyMsg+13, rcvByte, 3);
-			Log(LC_Console_c, sKeyMsg);
-			if (!LogIsSingleMode()) {
-				LogSetSingleMode(LC_Console_c);
-				MenuStart();
-			}
-			if (MenuHandle(rcvByte)) {
-				LogSetSingleMode(LC_EOL_c);
-			}
+			MenuHandle(rcvByte);
 		}
 
 		/*

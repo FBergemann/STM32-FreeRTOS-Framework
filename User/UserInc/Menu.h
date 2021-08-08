@@ -10,7 +10,6 @@
 
 #include <stdint.h>
 
-void MenuStart();
-bool MenuHandle(uint8_t rcvByte);
+void MenuHandle(uint8_t rcvByte);
 
 #endif /* USERINC_MENU_H_ */
