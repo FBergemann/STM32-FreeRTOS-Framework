@@ -8,6 +8,7 @@
 #include "stm32f7xx_hal.h" // TODO: is there no generic wrapper for this?
 
 #include "UserInc/Logging.h"
+#include "UserInc/Tasks/TaskPWM.h"
 #include "UserInc/Menu.h"
 
 typedef enum {
@@ -71,14 +72,26 @@ void ShowMenu_Overrule_PWM()
 	Log(LC_Console_c, "x|X: exit\r\n");
 }
 
+static char sPrescaler[]			= "p|P: prescaler      #.....\r\n";			// 16 bit prescaler
+static char sCounter[]				= "c|C: counter        #..........\r\n";	// 32 bit counter
+static char sDutyCyclePercent[]		= "d:   duty cycle     ... %\r\n";			// duty cycle in %
+static char sDutyCycleAbsolute[]	= "D:   duty cycle     #..........\r\n";	// duty cycle abolute
+
 void ShowMenu_Overrule_PWM_Enable()
 {
+	LogUInt16ToStr(sPrescaler			+ 21, TaskPWM_GetFixedPrescaler(), 5);
+	LogUInt32ToStr(sCounter				+ 21, TaskPWM_GetFixedCounter(), 10);
+	LogUInt8ToStr (sDutyCyclePercent	+ 20, TaskPWM_GetFixedDutyCyclePercent(), 3);
+	LogUInt32ToStr(sDutyCycleAbsolute	+ 21, TaskPWM_GetFixedDutyCycleAbsolute(), 10);
+
 	Log(LC_Console_c, "*******************\r\n");
 	Log(LC_Console_c, "Enable Overrule PWM\r\n");
 	Log(LC_Console_c, "*******************\r\n");
-	Log(LC_Console_c, "p|P: prescaler\r\n");
-	Log(LC_Console_c, "c|C: counter period\r\n");
-	Log(LC_Console_c, "d|D: duty cycle [%]\r\n");
+	Log(LC_Console_c, sPrescaler);
+	Log(LC_Console_c, sCounter);
+	Log(LC_Console_c, sDutyCyclePercent);
+	Log(LC_Console_c, sDutyCycleAbsolute);
+	Log(LC_Console_c, "t|T take over\r\n");
 	Log(LC_Console_c, "\r\n");
 	Log(LC_Console_c, "x|X: exit\r\n");
 }

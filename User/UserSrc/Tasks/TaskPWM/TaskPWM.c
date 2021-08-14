@@ -20,72 +20,75 @@
 typedef struct {
 	uint16_t prescaler;			// prescaler
 	uint32_t counterPeriod;		// counter period
-	uint32_t dutyCycle;			// percentage (will be re-calculated)
+	uint8_t  dutyCyclePercent;	// percentage (will be re-calculated)
+	uint32_t dutyCycleAbolute;	// absolute value
 } PWMSettings_t;
+
+static PWMSettings_t sFixedPWMSettings = { 2687, 31249, 50, 0};
 
 /*
  * demo PWM settings to test varying over time
  */
 static PWMSettings_t pwmSettings[] = {
 	// 1) updating counter period, only
-	{ 2687,	31249, 	50 },
-	{ 2687,	31249, 	50 },
-	{ 2687,	31249, 	50 },
-	{ 2687,	31249, 	50 },
-	{ 2687,	31249, 	50 },
+	{ 2687,	31249, 	50, 0 },
+	{ 2687,	31249, 	50, 0 },
+	{ 2687,	31249, 	50, 0 },
+	{ 2687,	31249, 	50, 0 },
+	{ 2687,	31249, 	50, 0 },
 
-	{ 2687,	3124, 	50 },
-	{ 2687,	3124, 	50 },
-	{ 2687,	3124, 	50 },
-	{ 2687,	3124, 	50 },
-	{ 2687,	3124, 	50 },
+	{ 2687,	3124, 	50, 0 },
+	{ 2687,	3124, 	50, 0 },
+	{ 2687,	3124, 	50, 0 },
+	{ 2687,	3124, 	50, 0 },
+	{ 2687,	3124, 	50, 0 },
 
-	{ 2687,	312, 	50 },
-	{ 2687,	312, 	50 },
-	{ 2687,	312, 	50 },
-	{ 2687,	312, 	50 },
-	{ 2687,	312, 	50 },
+	{ 2687,	312, 	50, 0 },
+	{ 2687,	312, 	50, 0 },
+	{ 2687,	312, 	50, 0 },
+	{ 2687,	312, 	50, 0 },
+	{ 2687,	312, 	50, 0 },
 
-	{ 2687,	31, 	50 },
-	{ 2687,	31, 	50 },
-	{ 2687,	31, 	50 },
-	{ 2687,	31, 	50 },
-	{ 2687,	31, 	50 },
+	{ 2687,	31, 	50, 0 },
+	{ 2687,	31, 	50, 0 },
+	{ 2687,	31, 	50, 0 },
+	{ 2687,	31, 	50, 0 },
+	{ 2687,	31, 	50, 0 },
 
 	// 2) updating prescaler, only
 
-	{ 2000,	31, 	50 },
-	{ 2000,	31, 	50 },
-	{ 2000,	31, 	50 },
-	{ 2000,	31, 	50 },
-	{ 2000,	31, 	50 },
+	{ 2000,	31, 	50, 0 },
+	{ 2000,	31, 	50, 0 },
+	{ 2000,	31, 	50, 0 },
+	{ 2000,	31, 	50, 0 },
+	{ 2000,	31, 	50, 0 },
 
-	{ 100,	31, 	50 },
-	{ 100,	31, 	50 },
-	{ 100,	31, 	50 },
-	{ 100,	31, 	50 },
-	{ 100,	31, 	50 },
+	{ 100,	31, 	50, 0 },
+	{ 100,	31, 	50, 0 },
+	{ 100,	31, 	50, 0 },
+	{ 100,	31, 	50, 0 },
+	{ 100,	31, 	50, 0 },
 
-	{ 20,	31, 	50 },
-	{ 20,	31, 	50 },
-	{ 20,	31, 	50 },
-	{ 20,	31, 	50 },
-	{ 20,	31, 	50 },
+	{ 20,	31, 	50, 0 },
+	{ 20,	31, 	50, 0 },
+	{ 20,	31, 	50, 0 },
+	{ 20,	31, 	50, 0 },
+	{ 20,	31, 	50, 0 },
 
 	// 1) updating counter period, again
-	{ 20,	17, 	50 },
-	{ 20,	17, 	50 },
-	{ 20,	17, 	50 },
-	{ 20,	17, 	50 },
-	{ 20,	17, 	50 },
+	{ 20,	17, 	50, 0 },
+	{ 20,	17, 	50, 0 },
+	{ 20,	17, 	50, 0 },
+	{ 20,	17, 	50, 0 },
+	{ 20,	17, 	50, 0 },
 
 #if 0 // 1,272,723 Hz
 	// and get higher
-	{ 5,	10, 	50 },
-	{ 5,	10, 	50 },
-	{ 5,	10, 	50 },
-	{ 5,	10, 	50 },
-	{ 5,	10, 	50 },
+	{ 5,	10, 	50, 0 },
+	{ 5,	10, 	50, 0 },
+	{ 5,	10, 	50, 0 },
+	{ 5,	10, 	50, 0 },
+	{ 5,	10, 	50, 0 },
 #endif
 	// 3) updating both: prescaler and counter period
 };
@@ -152,9 +155,14 @@ void TaskPWM_Interrupt(TIM_HandleTypeDef *htim2)
  */
 static void UpdateSettings()
 {
+	uint64_t tmpVal;
 	for (int i = 0; i < PWMSettingsNo; ++i) {
-		pwmSettings[i].dutyCycle = pwmSettings[i].dutyCycle * pwmSettings[i].counterPeriod / 100;
+		tmpVal = pwmSettings[i].dutyCyclePercent; tmpVal *= pwmSettings[i].counterPeriod; tmpVal /= 100;
+		pwmSettings[i].dutyCycleAbolute = tmpVal;
 	}
+
+	tmpVal = sFixedPWMSettings.dutyCyclePercent; tmpVal *= sFixedPWMSettings.counterPeriod; tmpVal /= 100;
+	sFixedPWMSettings.dutyCycleAbolute = tmpVal;
 }
 
 void TaskPWM_Run(void * argument)
@@ -229,8 +237,8 @@ void TaskPWM_Run(void * argument)
 			TIM2->ARR = pwmSettings[PWMSettingsIndex].counterPeriod;
 		}
 
-		if (pwmSettings[oldPWMSettingsIndex].dutyCycle != pwmSettings[PWMSettingsIndex].dutyCycle) {
-			TIM2->CCR1 = pwmSettings[PWMSettingsIndex].dutyCycle;
+		if (pwmSettings[oldPWMSettingsIndex].dutyCycleAbolute != pwmSettings[PWMSettingsIndex].dutyCycleAbolute) {
+			TIM2->CCR1 = pwmSettings[PWMSettingsIndex].dutyCycleAbolute;
 		}
 
 		/*
@@ -249,6 +257,56 @@ void TaskPWM_Run(void * argument)
 
 		vTaskDelayUntil( &xLastWakeTime, sInterval);		// wait for remaining #sInterval ticks for next cycle
 	};
+}
+
+
+// getter
+uint16_t TaskPWM_GetFixedPrescaler()
+{
+	return sFixedPWMSettings.prescaler;
+}
+
+uint32_t TaskPWM_GetFixedCounter()
+{
+	return sFixedPWMSettings.counterPeriod;
+}
+
+uint8_t  TaskPWM_GetFixedDutyCyclePercent()
+{
+	return sFixedPWMSettings.dutyCyclePercent;
+}
+
+uint32_t  TaskPWM_GetFixedDutyCycleAbsolute()
+{
+	return sFixedPWMSettings.dutyCycleAbolute;
+}
+
+// setter
+void TaskPWM_SetFixedPrescaler(uint16_t value)
+{
+	sFixedPWMSettings.prescaler = value;
+}
+
+void TaskPWM_SetFixedCounter(uint32_t value)
+{
+	sFixedPWMSettings.counterPeriod = value;
+	uint64_t tmpVal = sFixedPWMSettings.dutyCyclePercent; tmpVal *= value; tmpVal /= 100;
+	sFixedPWMSettings.dutyCycleAbolute = tmpVal;
+
+}
+
+void TaskPWM_SetFixedDutyCyclePercent(uint8_t value)
+{
+	sFixedPWMSettings.dutyCyclePercent = value;
+	uint64_t tmpVal = value; tmpVal *= sFixedPWMSettings.counterPeriod ; tmpVal /= 100;
+	sFixedPWMSettings.dutyCycleAbolute = tmpVal;
+}
+
+void TaskPWM_SetFixedDutyCycleAbsolute(uint32_t value)
+{
+	sFixedPWMSettings.dutyCycleAbolute = value;
+	uint64_t tmpVal = 100; tmpVal *= value; tmpVal /= sFixedPWMSettings.counterPeriod;
+	sFixedPWMSettings.dutyCyclePercent = tmpVal;
 }
 
 #endif // ENABLE_PWM

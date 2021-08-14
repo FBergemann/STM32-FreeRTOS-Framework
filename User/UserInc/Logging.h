@@ -33,6 +33,7 @@ bool	LogIsSingleMode();
 
 // conversions
 void	LogIntToStr(char *dest, int value, int digits);
+void 	LogUInt8ToStr (char *dest, uint8_t value, int digits);
 void 	LogUInt16ToStr(char *dest, uint16_t value, int digits);
 void 	LogUInt32ToStr(char *dest, uint32_t value, int digits);
 
