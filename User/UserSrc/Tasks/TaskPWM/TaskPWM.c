@@ -17,6 +17,8 @@
 #include "UserInc/Logging.h"
 #include "UserInc/TimerTick.h"
 
+#include "UserInc/Tasks/TaskPWM.h"
+
 typedef struct {
 	uint16_t prescaler;			// prescaler
 	uint32_t counterPeriod;		// counter period
@@ -25,6 +27,7 @@ typedef struct {
 } PWMSettings_t;
 
 static PWMSettings_t sFixedPWMSettings = { 2687, 31249, 50, 0};
+static UseFixedSettings_t sUseFixedSettings = UFS_Off_c;
 
 /*
  * demo PWM settings to test varying over time
@@ -220,25 +223,47 @@ void TaskPWM_Run(void * argument)
 		/*
 		 * update PWM settings
 		 */
-
-		// old settings
-		oldPWMSettingsIndex = PWMSettingsIndex;
-
-		// index for new settings (wrap around)
-		PWMSettingsIndex += 1;
-		PWMSettingsIndex %= PWMSettingsNo;
-
-		// updates:
-		if (pwmSettings[oldPWMSettingsIndex].prescaler != pwmSettings[PWMSettingsIndex].prescaler) {
-			TIM2->PSC = pwmSettings[PWMSettingsIndex].prescaler;
-		}
-
-		if (pwmSettings[oldPWMSettingsIndex].counterPeriod != pwmSettings[PWMSettingsIndex].counterPeriod) {
-			TIM2->ARR = pwmSettings[PWMSettingsIndex].counterPeriod;
-		}
-
-		if (pwmSettings[oldPWMSettingsIndex].dutyCycleAbolute != pwmSettings[PWMSettingsIndex].dutyCycleAbolute) {
+		switch (sUseFixedSettings) {
+		case UFS_Enable_c:
+			TIM2->PSC  = sFixedPWMSettings.prescaler;
+			TIM2->ARR  = sFixedPWMSettings.counterPeriod;
+			TIM2->CCR1 = sFixedPWMSettings.dutyCycleAbolute;
+			sUseFixedSettings = UFS_Enabled_c;
+			break;
+		case UFS_Enabled_c:
+			break; // just continue w/o changes
+		case UFS_Disable_c:
+			// update unconditionally
+			TIM2->PSC  = pwmSettings[PWMSettingsIndex].prescaler;
+			TIM2->ARR  = pwmSettings[PWMSettingsIndex].counterPeriod;
 			TIM2->CCR1 = pwmSettings[PWMSettingsIndex].dutyCycleAbolute;
+			sUseFixedSettings = UFS_Off_c;
+			break;
+		case UFS_Off_c:
+			{
+				// update conditionally
+
+				// old settings
+				oldPWMSettingsIndex = PWMSettingsIndex;
+
+				// index for new settings (wrap around)
+				PWMSettingsIndex += 1;
+				PWMSettingsIndex %= PWMSettingsNo;
+
+				// updates:
+				if (pwmSettings[oldPWMSettingsIndex].prescaler != pwmSettings[PWMSettingsIndex].prescaler) {
+					TIM2->PSC = pwmSettings[PWMSettingsIndex].prescaler;
+				}
+
+				if (pwmSettings[oldPWMSettingsIndex].counterPeriod != pwmSettings[PWMSettingsIndex].counterPeriod) {
+					TIM2->ARR = pwmSettings[PWMSettingsIndex].counterPeriod;
+				}
+
+				if (pwmSettings[oldPWMSettingsIndex].dutyCycleAbolute != pwmSettings[PWMSettingsIndex].dutyCycleAbolute) {
+					TIM2->CCR1 = pwmSettings[PWMSettingsIndex].dutyCycleAbolute;
+				}
+			}
+			break;
 		}
 
 		/*
@@ -307,6 +332,11 @@ void TaskPWM_SetFixedDutyCycleAbsolute(uint32_t value)
 	sFixedPWMSettings.dutyCycleAbolute = value;
 	uint64_t tmpVal = 100; tmpVal *= value; tmpVal /= sFixedPWMSettings.counterPeriod;
 	sFixedPWMSettings.dutyCyclePercent = tmpVal;
+}
+
+void TaskPWM_UseFixedSettings(UseFixedSettings_t value)
+{
+	sUseFixedSettings = value;
 }
 
 #endif // ENABLE_PWM

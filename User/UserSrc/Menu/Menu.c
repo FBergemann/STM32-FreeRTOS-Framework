@@ -75,7 +75,7 @@ void ShowMenu_Overrule_PWM()
 static char sPrescaler[]			= "p|P: prescaler      #.....\r\n";			// 16 bit prescaler
 static char sCounter[]				= "c|C: counter        #..........\r\n";	// 32 bit counter
 static char sDutyCyclePercent[]		= "d:   duty cycle     ... %\r\n";			// duty cycle in %
-static char sDutyCycleAbsolute[]	= "D:   duty cycle     #..........\r\n";	// duty cycle abolute
+static char sDutyCycleAbsolute[]	= "D:   duty cycle     #..........\r\n";	// duty cycle absolute
 
 void ShowMenu_Overrule_PWM_Enable()
 {
@@ -91,7 +91,7 @@ void ShowMenu_Overrule_PWM_Enable()
 	Log(LC_Console_c, sCounter);
 	Log(LC_Console_c, sDutyCyclePercent);
 	Log(LC_Console_c, sDutyCycleAbsolute);
-	Log(LC_Console_c, "t|T take over\r\n");
+	Log(LC_Console_c, "t|T: take over\r\n");
 	Log(LC_Console_c, "\r\n");
 	Log(LC_Console_c, "x|X: exit\r\n");
 }
@@ -275,8 +275,14 @@ void MenuHandle_Overrule_PWM_Enable(uint8_t rcvByte)
 	case 'c': /* counter */
 	case 'C':
 		break;
-	case 'd': /* duty cycle [%] */
-	case 'D':
+	case 'd': /* duty cycle in percent */
+		break;
+	case 'D': /* duty cycle absolute */
+		break;
+	case 't':
+	case 'T':
+		TaskPWM_UseFixedSettings(UFS_Enable_c);
+		sMenuState = Menu_Off_c; // THIS menu  off, leave up to the caller to reset properly
 		break;
 	case 'x':
 	case 'X':
@@ -289,25 +295,7 @@ void MenuHandle_Overrule_PWM_Disable(uint8_t rcvByte)
 {
 	sMenuState = Menu_Overrule_PWM_Disable_c;
 
-	// TODO: instruct PWM module to use normal mode again
-
-#if 0 // no own menu -> no evaluation for keys
-	switch(rcvByte) {
-	case 'p': /* prescaler */
-	case 'P':
-		break;
-	case 'c': /* counter */
-	case 'C':
-		break;
-	case 'd': /* duty cycle [%] */
-	case 'D':
-		break;
-	case 'x':
-	case 'X':
-		sMenuState = Menu_Off_c; // THIS menu  off, leave up to the caller to reset properly
-		break;
-	}
-#endif
+	TaskPWM_UseFixedSettings(UFS_Disable_c);
 
 	sMenuState = Menu_Off_c; // unconditionally back to parent menu
 }

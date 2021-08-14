@@ -25,6 +25,15 @@ void TaskPWM_SetFixedCounter(uint32_t value);
 void TaskPWM_SetFixedDutyCyclePercent(uint8_t value);
 void TaskPWM_SetFixedDutyCycleAbolute(uint32_t value);
 
+typedef enum {
+	UFS_Off_c = 0,
+	UFS_Enable_c,
+	UFS_Enabled_c,
+	UFS_Disable_c,
+} UseFixedSettings_t;
+
+void TaskPWM_UseFixedSettings(UseFixedSettings_t value);
+
 #endif /* USERINC_TASKS_TASKPWM_H_ */
 
 #endif // ENABLE_PWM
