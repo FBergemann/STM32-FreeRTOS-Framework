@@ -7,6 +7,7 @@
 
 #include "stm32f7xx_hal.h" // TODO: is there no generic wrapper for this?
 
+#include "UserInc/System.h"
 #include "UserInc/Logging.h"
 #include "UserInc/Tasks/TaskPWM.h"
 #include "UserInc/Menu.h"
@@ -107,13 +108,17 @@ static char sPrescaler[]			= "p|P: prescaler      #.....\r\n";			// 16 bit presc
 static char sCounter[]				= "c|C: counter        #..........\r\n";	// 32 bit counter
 static char sDutyCyclePercent[]		= "d:   duty cycle     ... %\r\n";			// duty cycle in %
 static char sDutyCycleAbsolute[]	= "D:   duty cycle     #..........\r\n";	// duty cycle absolute
+static char sPWMClock[]				= "-->  PWM clock      #..........\r\n"; 	// the calculated PWM clock
 
 void ShowMenu_Overrule_PWM_Enable()
 {
+	uint32_t PWMClock = SysClock_v / (TaskPWM_GetFixedPrescaler() + 1) / (TaskPWM_GetFixedCounter() + 1) / 2; // TODO: don't know, why i have to use "/2" at the end?!
+
 	LogUInt16ToStr(sPrescaler			+ 21, TaskPWM_GetFixedPrescaler(), 5);
 	LogUInt32ToStr(sCounter				+ 21, TaskPWM_GetFixedCounter(), 10);
 	LogUInt8ToStr (sDutyCyclePercent	+ 20, TaskPWM_GetFixedDutyCyclePercent(), 3);
 	LogUInt32ToStr(sDutyCycleAbsolute	+ 21, TaskPWM_GetFixedDutyCycleAbsolute(), 10);
+	LogUInt32ToStr(sPWMClock			+ 21, PWMClock, 10);
 
 	Log(LC_Console_c, "*******************\r\n");
 	Log(LC_Console_c, "Enable Overrule PWM\r\n");
@@ -122,6 +127,7 @@ void ShowMenu_Overrule_PWM_Enable()
 	Log(LC_Console_c, sCounter);
 	Log(LC_Console_c, sDutyCyclePercent);
 	Log(LC_Console_c, sDutyCycleAbsolute);
+	Log(LC_Console_c, sPWMClock);
 	Log(LC_Console_c, "t|T: take over\r\n");
 	Log(LC_Console_c, "\r\n");
 	Log(LC_Console_c, "x|X: exit\r\n");
