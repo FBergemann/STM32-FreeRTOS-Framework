@@ -23,7 +23,7 @@ uint32_t TaskPWM_GetFixedDutyCycleAbsolute();
 void TaskPWM_SetFixedPrescaler(uint16_t value);
 void TaskPWM_SetFixedCounter(uint32_t value);
 void TaskPWM_SetFixedDutyCyclePercent(uint8_t value);
-void TaskPWM_SetFixedDutyCycleAbolute(uint32_t value);
+void TaskPWM_SetFixedDutyCycleAbsolute(uint32_t value);
 
 typedef enum {
 	UFS_Off_c = 0,

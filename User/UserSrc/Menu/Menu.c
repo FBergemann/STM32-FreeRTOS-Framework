@@ -52,7 +52,9 @@ static void MenuHandle_Overrule_PWM_Disable(uint8_t rcvByte);
 
 void MenuHandle_Shadow(uint8_t rcvByte);
 
+static bool Parse_Uint32(char *str, uint32_t *value);
 static bool Parse_Uint16(char *str, uint16_t *value);
+static bool Parse_Uint8(char *str, uint8_t *value);
 
 void ShowMenu_Top()
 {
@@ -355,6 +357,22 @@ void MenuHandle_Shadow(uint8_t rcvByte)
 					TaskPWM_SetFixedPrescaler(sValueUint16);
 				}
 				break;
+			case 'c':
+			case 'C':
+				if (Parse_Uint32(sGetValue, &sValueUint32)) {
+					TaskPWM_SetFixedCounter(sValueUint32);
+				}
+				break;
+			case 'd':
+				if (Parse_Uint8(sGetValue, &sValueUint8)) {
+					TaskPWM_SetFixedDutyCyclePercent(sValueUint8);
+				}
+				break;
+			case 'D':
+				if (Parse_Uint32(sGetValue, &sValueUint32)) {
+					TaskPWM_SetFixedDutyCycleAbsolute(sValueUint32);
+				}
+				break;
 			}
 		}
 		ShowMenu_Overrule_PWM_Enable();
@@ -372,6 +390,21 @@ void MenuHandle_Overrule_PWM_Disable(uint8_t rcvByte)
 	sMenuState = Menu_Off_c; // unconditionally back to parent menu
 }
 
+bool Parse_Uint32(char *str, uint32_t *value)
+{
+	if (str == NULL) return false;
+	if (value == NULL) return false;
+
+	char *end;
+	errno = 0;
+	intmax_t val = strtoumax(str, &end, 10);
+	if (errno == ERANGE || val < 0 || val > UINT32_MAX || end == str || *end != '\0')
+		return false;
+	*value = (uint32_t) val;
+
+	return true;
+}
+
 bool Parse_Uint16(char *str, uint16_t *value)
 {
 	if (str == NULL) return false;
@@ -383,6 +416,21 @@ bool Parse_Uint16(char *str, uint16_t *value)
 	if (errno == ERANGE || val < 0 || val > UINT16_MAX || end == str || *end != '\0')
 		return false;
 	*value = (uint16_t) val;
+
+	return true;
+}
+
+bool Parse_Uint8(char *str, uint8_t *value)
+{
+	if (str == NULL) return false;
+	if (value == NULL) return false;
+
+	char *end;
+	errno = 0;
+	intmax_t val = strtoumax(str, &end, 10);
+	if (errno == ERANGE || val < 0 || val > UINT8_MAX || end == str || *end != '\0')
+		return false;
+	*value = (uint8_t) val;
 
 	return true;
 }
