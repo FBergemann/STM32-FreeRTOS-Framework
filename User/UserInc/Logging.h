@@ -26,6 +26,7 @@ typedef enum {
 
 void	LogWait4Ready();
 void	Log(const LogClient_t logClient, const char* str);
+void 	LogNoPrefix(const LogClient_t logClient, const char* str);
 char*	LogClientID2String(const LogClient_t logClient);
 char*	LogMakePrefix(const LogClient_t logClient, size_t* lenPrefix);
 void	LogSetSingleMode(LogClient_t client);

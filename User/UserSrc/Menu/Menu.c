@@ -11,6 +11,9 @@
 #include "UserInc/Tasks/TaskPWM.h"
 #include "UserInc/Menu.h"
 
+#include <errno.h>
+#include <inttypes.h>
+
 typedef enum {
 	Menu_Off_c = 0,
 	Menu_Top_c,
@@ -19,11 +22,37 @@ typedef enum {
 			Menu_Overrule_PWM_c,
 				Menu_Overrule_PWM_Enable_c,
 				Menu_Overrule_PWM_Disable_c,
+	Menu_Get_Value_c,
 } MenuState_t;
 
 static MenuState_t sMenuState = Menu_Off_c;
+static MenuState_t sMenuStateShadow = Menu_Off_c;
+static uint8_t sMenuStateShadowLastKey;
 
+#if 0
 static char sKeyMsg[] = "key pressed '###'\r\n";
+#endif
+
+static char sEnterValue[] = "Enter value: ";
+static char sSingleKey[] = "x";
+
+static char sGetValue[256];
+static size_t sGetValuePos=0;
+
+static uint32_t sValueUint32;
+static uint16_t sValueUint16;
+static uint8_t  sValueUint8;
+
+static void MenuHandle_Top(uint8_t rcvByte);
+static void MenuHandle_StartStop(uint8_t rcvByte);
+static void MenuHandle_Overrule(uint8_t rcvByte);
+static void MenuHandle_Overrule_PWM(uint8_t rcvByte);
+static void MenuHandle_Overrule_PWM_Enable(uint8_t rcvByte);
+static void MenuHandle_Overrule_PWM_Disable(uint8_t rcvByte);
+
+void MenuHandle_Shadow(uint8_t rcvByte);
+
+static bool Parse_Uint16(char *str, uint16_t *value);
 
 void ShowMenu_Top()
 {
@@ -96,17 +125,13 @@ void ShowMenu_Overrule_PWM_Enable()
 	Log(LC_Console_c, "x|X: exit\r\n");
 }
 
-void MenuHandle_Top(uint8_t rcvByte);
-void MenuHandle_StartStop(uint8_t rcvByte);
-void MenuHandle_Overrule(uint8_t rcvByte);
-void MenuHandle_Overrule_PWM(uint8_t rcvByte);
-void MenuHandle_Overrule_PWM_Enable(uint8_t rcvByte);
-void MenuHandle_Overrule_PWM_Disable(uint8_t rcvByte);
 
 void MenuHandle(uint8_t rcvByte)
 {
+#if 0
     LogIntToStr(sKeyMsg+13, rcvByte, 3);
     Log(LC_Console_c, sKeyMsg);
+#endif
 
 	switch (sMenuState)
 	{
@@ -149,6 +174,20 @@ void MenuHandle(uint8_t rcvByte)
 						MenuHandle_Overrule_PWM(rcvByte);
 					}
 					break;
+		case Menu_Get_Value_c:
+			if (rcvByte == '\r') {
+				LogNoPrefix(LC_Console_c, "\r\n");
+				sGetValue[sGetValuePos] = '\0';
+				MenuHandle_Shadow(rcvByte);
+				sGetValuePos = 0;
+			}
+			else {
+				sSingleKey[0] = rcvByte;
+				LogNoPrefix(LC_Console_c, sSingleKey);
+				sGetValue[sGetValuePos] = rcvByte;
+				sGetValuePos++;
+				sGetValuePos %= sizeof(sGetValue) - 1;
+			}
 	}
 }
 
@@ -260,6 +299,7 @@ void MenuHandle_Overrule_PWM(uint8_t rcvByte)
 
 void MenuHandle_Overrule_PWM_Enable(uint8_t rcvByte)
 {
+
 	if (sMenuState != Menu_Overrule_PWM_Enable_c) {
 		ShowMenu_Overrule_PWM_Enable();
 		sMenuState = Menu_Overrule_PWM_Enable_c;
@@ -271,13 +311,14 @@ void MenuHandle_Overrule_PWM_Enable(uint8_t rcvByte)
 	switch(rcvByte) {
 	case 'p': /* prescaler */
 	case 'P':
-		break;
 	case 'c': /* counter */
 	case 'C':
-		break;
 	case 'd': /* duty cycle in percent */
-		break;
 	case 'D': /* duty cycle absolute */
+		Log(LC_Console_c, sEnterValue);
+		sMenuStateShadow = sMenuState;
+		sMenuStateShadowLastKey = rcvByte;
+		sMenuState = Menu_Get_Value_c;
 		break;
 	case 't':
 	case 'T':
@@ -291,6 +332,37 @@ void MenuHandle_Overrule_PWM_Enable(uint8_t rcvByte)
 	}
 }
 
+void MenuHandle_Shadow(uint8_t rcvByte)
+{
+	sMenuState = sMenuStateShadow; // restore
+
+	switch (sMenuState) {
+	case Menu_Off_c:
+	case Menu_Top_c:
+	case Menu_StartStop_c:
+	case Menu_Overrule_c:
+	case Menu_Overrule_PWM_c:
+	case Menu_Overrule_PWM_Disable_c:
+	case Menu_Get_Value_c:
+		break;
+
+	case Menu_Overrule_PWM_Enable_c:
+		{
+			switch (sMenuStateShadowLastKey) {
+			case 'p':
+			case 'P':
+				if (Parse_Uint16(sGetValue, &sValueUint16)) {
+					TaskPWM_SetFixedPrescaler(sValueUint16);
+				}
+				break;
+			}
+		}
+		ShowMenu_Overrule_PWM_Enable();
+		sMenuState = Menu_Overrule_PWM_Enable_c;
+		break;
+	}
+}
+
 void MenuHandle_Overrule_PWM_Disable(uint8_t rcvByte)
 {
 	sMenuState = Menu_Overrule_PWM_Disable_c;
@@ -298,4 +370,19 @@ void MenuHandle_Overrule_PWM_Disable(uint8_t rcvByte)
 	TaskPWM_UseFixedSettings(UFS_Disable_c);
 
 	sMenuState = Menu_Off_c; // unconditionally back to parent menu
+}
+
+bool Parse_Uint16(char *str, uint16_t *value)
+{
+	if (str == NULL) return false;
+	if (value == NULL) return false;
+
+	char *end;
+	errno = 0;
+	intmax_t val = strtoumax(str, &end, 10);
+	if (errno == ERANGE || val < 0 || val > UINT16_MAX || end == str || *end != '\0')
+		return false;
+	*value = (uint16_t) val;
+
+	return true;
 }

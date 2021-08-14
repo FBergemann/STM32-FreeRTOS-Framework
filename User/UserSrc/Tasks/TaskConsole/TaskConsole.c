@@ -147,6 +147,18 @@ void TaskConsole_AddLog(const LogClient_t logClient, const char* str)
 	osSemaphoreRelease(LogSemInstance);
 }
 
+void TaskConsole_AddLogNoPrefix(const LogClient_t logClient, const char* str)
+{
+	if (str == NULL) return;
+
+	size_t len = strlen(str) + 1;
+	if (len > LOG_BUFF_SIZE) return;
+
+	osSemaphoreAcquire(LogSemInstance, 0);
+		AddLogCore(str, len);
+	osSemaphoreRelease(LogSemInstance);
+}
+
 void TaskConsole_WaitReady()
 {
 	while (1) {

@@ -35,6 +35,13 @@ void Log(const LogClient_t logClient, const char* str)
 	}
 }
 
+void LogNoPrefix(const LogClient_t logClient, const char* str)
+{
+	if (sSingleClient == LC_EOL_c || sSingleClient == logClient) {
+		TaskConsole_AddLogNoPrefix(logClient, str);
+	}
+}
+
 char* LogClientID2String(const LogClient_t logClient)
 {
 	switch (logClient) {
